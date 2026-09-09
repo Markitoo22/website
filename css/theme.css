@@ -26,12 +26,14 @@
   /* ============================================================
      =============   EL UNICO COLOR DECLARADO   =================
      ============================================================ */
-  --brand: #FF2E2E;
+  /*--brand: #FF2E2E;*/
+  --brand: #00d19d;
 
 
   /* --- acentos: mismo tono y saturacion, distinta claridad --- */
   --accent:        var(--brand);
-  --accent-hi:     hsl(from var(--brand) h s 61.5686%);              /* alto del boton */
+  --btn-top:       hsl(from var(--brand) h s 46%);                   /* alto del boton */
+  --btn-bottom:    hsl(from var(--brand) calc(h - 5.028) s 24%);     /* base del boton */
   --accent-lit:    hsl(from var(--brand) h s 64.5098%);              /* lineas del plexus */
   --accent-mid:    hsl(from var(--brand) h s 62.5490%);              /* nodos del plexus */
   --accent-deep:   hsl(from var(--brand) calc(h - 5.028) s 35.0980%); /* fondo del boton, glow */

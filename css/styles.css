@@ -120,7 +120,7 @@ html.dragging, html.dragging *{ cursor: grabbing !important; }
 .btn{
   display: inline-flex; align-items: center; gap: 12px;
   padding: 15px 24px; border-radius: 2px;
-  background: linear-gradient(180deg, var(--accent-hi), var(--accent-deep));
+  background: linear-gradient(180deg, var(--btn-top), var(--btn-bottom));
   color: var(--fg); font-weight: 600; font-size: 15px; letter-spacing: -0.01em;
   box-shadow: 0 14px 40px -18px var(--btn-shadow), inset 0 1px 0 var(--gloss);
   transition: transform .25s var(--ease), box-shadow .25s var(--ease);

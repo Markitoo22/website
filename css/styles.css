@@ -353,6 +353,9 @@ html.booting .rise{ animation: none; }
   font-family: var(--tech); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
 }
 .foot a:hover{ color: var(--fg); }
+/* version del deploy: para distinguir "esta mal" de "estas viendo una copia
+   vieja del CDN" sin necesidad de consola */
+.foot__build{ font-weight: 400; opacity: .45; margin-left: .4em; }
 
 /* ============ entradas ============ */
 [data-reveal]{ opacity: 1; }

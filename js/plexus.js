@@ -64,6 +64,17 @@
     icon.href = 'data:image/svg+xml,' + encodeURIComponent(new XMLSerializer().serializeToString(clon));
   }
 
+  /* ---------- sello de version ----------
+     Sale del ?v= del link del CSS, asi hay un solo numero que mantener.
+     Sirve para saber de un vistazo, desde un celular y sin consola, si lo
+     que estas viendo es la version nueva o una copia guardada por el CDN. */
+  var sello = document.getElementById('build');
+  var hoja = document.querySelector('link[href*="styles.css"]');
+  if (sello && hoja) {
+    var v = /[?&]v=([\w.-]+)/.exec(hoja.getAttribute('href') || '');
+    if (v) sello.textContent = v[1];
+  }
+
   /* ---------- canvas ---------- */
   var canvas = document.getElementById('plexus');
   var ctx = canvas.getContext('2d', { alpha: true });

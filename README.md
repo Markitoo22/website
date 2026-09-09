@@ -62,6 +62,27 @@ Lo que quedo del setup viejo y NO hay que tocar:
 
 Se elimino `A @ 23.227.38.65`, que era la IP de Shopify.
 
+### Cache del CDN (el `?v=` de los links)
+
+Pages esta detras de Fastly y sirve todo con `Cache-Control: max-age=600`.
+Cada nodo del CDN guarda su propia copia, asi que dos redes distintas pueden
+estar viendo versiones distintas hasta 10 minutos: es tipico ver el cambio en
+la PC por WiFi y no en el celular por 4G, porque salen por nodos diferentes.
+
+Los links a `css/` y `js/` en `index.html` llevan `?v=AAAAMMDD`. **Hay que
+subir ese numero en cada deploy que toque CSS o JS**: al cambiar la URL, el
+navegador y el CDN estan obligados a pedir el archivo de nuevo.
+
+Para verificar desde afuera:
+
+```
+curl -sI https://mlpcperformance.com/css/styles.css | grep -iE "age|x-cache|etag"
+```
+
+`Age` es la antiguedad de la copia en ese nodo y `X-Served-By` dice cual es
+(`-EZE` es Ezeiza). Para probar en el celular sin esperar, alcanza con abrir
+`mlpcperformance.com/?1` y subir el numero.
+
 ## Idiomas
 
 Toda la copy vive en `js/i18n.js` (39 claves x 6 idiomas: es, en, pt, fr, de,

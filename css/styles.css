@@ -9,7 +9,7 @@ body{
   margin: 0;
   background: var(--ink);
   color: var(--fg);
-  font-family: var(--display);
+  font-family: var(--prose);
   font-size: 16px;
   line-height: 1.5;
   letter-spacing: -0.005em;
@@ -51,7 +51,15 @@ html.dragging, html.dragging *{ cursor: grabbing !important; }
 }
 
 /* ============ estructura ============ */
-.wrap{ position: relative; z-index: 1; }
+.wrap{ position: relative; z-index: 1; opacity: 1; transition: opacity .4s var(--ease); }
+
+/* Compuerta de arranque: el contenido espera a que esten el idioma, la
+   moneda y las fuentes. El fondo (plexus + viñeta) si se ve mientras tanto,
+   asi la espera parece intencional y no una pagina en blanco.
+   La clase la pone y la saca el JS; sin JS no existe y todo se ve normal. */
+html.booting .wrap{ opacity: 0; }
+/* y las entradas arrancan cuando se levanta la compuerta, no antes */
+html.booting .rise{ animation: none; }
 .row{ width: 100%; max-width: var(--maxw); margin-inline: auto; padding-inline: var(--pad); }
 
 /* ============ header ============ */
@@ -65,36 +73,75 @@ html.dragging, html.dragging *{ cursor: grabbing !important; }
 .top.stuck{ border-bottom-color: var(--line-soft); background: var(--veil-stuck); }
 .top__in{ display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 62px; }
 .brand{ display: flex; align-items: center; gap: 10px; }
+/* el escudo del logo: SVG inline para que herede currentColor y los tokens
+   del tema. El favicon lo genera js/plexus.js a partir de este mismo SVG,
+   asi no hay dos veces el mismo dibujo. */
 .brand__mark{
-  display: grid; place-items: center; width: 26px; height: 26px;
-  border: 1px solid var(--accent); color: var(--accent);
-  font-family: var(--mono); font-size: 11px; font-weight: 700;
-  box-shadow: inset 0 0 18px -6px var(--accent-deep);
+  display: block; height: 30px; width: auto; flex: none;
+  color: var(--fg);
 }
+/* los rellenos por clase y no con fill="var(--x)": el var() en atributos de
+   presentacion tuvo bugs en Safari y dejaba el escudo negro */
+.brand__mark .l-ink{ fill: currentColor; }
+.brand__mark .l-field{ fill: var(--logo-field); }
+.brand__mark .l-shade{ fill: var(--logo-shade); }
 .brand__name{
-  font-family: var(--mono); font-size: 11px; font-weight: 500;
+  font-family: var(--tech); font-size: 11px; font-weight: 400;
   letter-spacing: .18em; text-transform: uppercase; color: var(--muted);
 }
 .top__right{ display: flex; align-items: center; gap: 14px; }
 
-/* selector de idioma: select nativo sin cromo, con su propio caret */
-.lang{ display: inline-flex; align-items: center; color: var(--muted); transition: color .25s var(--ease); }
-.lang:hover{ color: var(--fg); }
-.lang::after{
-  content: ""; width: 0; height: 0; margin-left: 5px;
-  border: 3px solid transparent; border-top-color: currentColor; opacity: .8;
-}
-.lang select{
-  appearance: none; -webkit-appearance: none;
-  background: transparent; border: 0; padding: 0; margin: 0;
-  color: inherit; cursor: pointer;
-  font-family: var(--mono); font-size: 11px; font-weight: 500;
+/* ---- selector de idioma ----
+   Menu propio en lugar de un <select>: el nativo abre una lista del
+   sistema operativo, blanca y con fuente de sistema, que no se puede
+   estilar. Este usa los mismos tokens que el resto de la pagina. */
+.lang{ position: relative; }
+
+.lang__btn{
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 6px 2px; margin: 0;
+  background: transparent; border: 0;
+  color: var(--muted); cursor: pointer;
+  font-family: var(--tech); font-size: 11px; font-weight: 400;
   letter-spacing: .14em; text-transform: uppercase;
+  transition: color .25s var(--ease);
 }
+.lang__btn:hover, .lang.is-open .lang__btn{ color: var(--fg); }
+.lang__caret{ opacity: .7; transition: transform .25s var(--ease); }
+.lang.is-open .lang__caret{ transform: rotate(180deg); }
+
+.lang__menu{
+  position: absolute; top: calc(100% + 12px); right: 0; z-index: 30;
+  min-width: 178px; padding: 6px; display: grid; gap: 1px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  box-shadow: 0 26px 50px -22px var(--veil-deep);
+  opacity: 0; visibility: hidden; transform: translateY(-6px);
+  transition: opacity .18s var(--ease), transform .18s var(--ease), visibility .18s;
+}
+.lang.is-open .lang__menu{ opacity: 1; visibility: visible; transform: none; }
+
+.lang__opt{
+  display: grid; grid-template-columns: 24px 1fr; align-items: center; gap: 10px;
+  width: 100%; padding: 9px 10px; margin: 0;
+  background: transparent; border: 0; border-radius: 2px;
+  color: var(--fg-2); cursor: pointer; text-align: left;
+  font-family: var(--prose); font-size: 14px; font-weight: 500; letter-spacing: -0.012em;
+  transition: background .2s var(--ease), color .2s var(--ease);
+}
+.lang__opt:hover{ background: var(--line-soft); color: var(--fg); }
+.lang__abbr{
+  font-family: var(--tech); font-size: 9.5px; font-weight: 400;
+  letter-spacing: .12em; color: var(--muted);
+  transition: color .2s var(--ease);
+}
+.lang__opt[aria-selected="true"]{ color: var(--fg); }
+.lang__opt[aria-selected="true"] .lang__abbr{ color: var(--accent); }
 
 .top__cta{
   display: inline-flex; align-items: center; gap: 8px;
-  font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+  font-family: var(--tech); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
   padding: 9px 14px; border: 1px solid var(--line); border-radius: 999px;
   transition: border-color .25s var(--ease), color .25s var(--ease);
 }
@@ -111,7 +158,7 @@ html.dragging, html.dragging *{ cursor: grabbing !important; }
 /* ============ eyebrow ============ */
 .eyebrow{
   display: flex; align-items: center; gap: 10px; margin: 0;
-  font-family: var(--mono); font-size: 10.5px; font-weight: 500;
+  font-family: var(--tech); font-size: 10.5px; font-weight: 400;
   letter-spacing: .2em; text-transform: uppercase; color: var(--muted);
 }
 .eyebrow i{ display: block; width: 5px; height: 5px; background: var(--accent); flex: none; }
@@ -121,12 +168,17 @@ html.dragging, html.dragging *{ cursor: grabbing !important; }
 .hero{ padding-block: clamp(56px, 11vh, 124px) clamp(44px, 7vh, 80px); }
 .hero__h1{
   margin: 22px 0 0;
-  font-size: clamp(2.8rem, 9.2vw, 6.4rem);
-  font-weight: 700; line-height: .92; letter-spacing: -0.042em;
-  text-wrap: balance;
+  font-family: var(--tech);
+  font-size: clamp(2.5rem, 8.2vw, 5.7rem);
+  font-weight: 700; line-height: .92;
+  /* Quantico es cuadrada y bastante abierta: en display se cierra un poco */
+  text-transform: uppercase; letter-spacing: -0.02em;
 }
 .hero__h1 em{ font-style: normal; color: var(--accent); }
-.hero__h1 span{ display: block; color: var(--fg-2); }
+/* un <span> por renglon: los cortes los decide la copy, no el ancho de la
+   ventana. nowrap para que ningun idioma se parta donde no corresponde. */
+.hero__h1 span{ display: block; white-space: nowrap; }
+.hero__h1 span + span{ color: var(--fg-2); }
 .hero__sub{
   margin: 26px 0 0; max-width: 46ch;
   font-size: clamp(1rem, 1.6vw, 1.18rem); color: var(--muted);
@@ -151,12 +203,12 @@ html.dragging, html.dragging *{ cursor: grabbing !important; }
 
 .link{
   display: inline-flex; align-items: center; gap: 8px;
-  font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+  font-family: var(--tech); font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
   color: var(--muted); padding-bottom: 3px; border-bottom: 1px solid var(--line);
   transition: color .25s var(--ease), border-color .25s var(--ease);
 }
 .link:hover{ color: var(--fg); border-color: var(--accent); }
-.note{ margin: 18px 0 0; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; color: var(--muted); }
+.note{ margin: 18px 0 0; font-family: var(--tech); font-size: 11px; letter-spacing: .1em; color: var(--muted); }
 
 /* aviso del idioma de la sesion: solo aparece si no hablamos el del visitante */
 .note--lang{ margin-top: 10px; color: var(--fg-2); }
@@ -171,8 +223,17 @@ html.dragging, html.dragging *{ cursor: grabbing !important; }
   display: flex; align-items: baseline; justify-content: space-between;
   gap: 14px 24px; flex-wrap: wrap; margin-bottom: 30px;
 }
-.sec__title{ margin: 0; font-size: clamp(1.35rem, 3vw, 1.9rem); font-weight: 600; letter-spacing: -0.03em; }
-.sec__meta{ margin: 0; font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+/* titulos de seccion: mayusculas en regular, con tracking abierto. En caps
+   el peso 600 grita y el tracking negativo pega las letras. */
+.sec__title{
+  display: flex; align-items: center; gap: 13px; margin: 0;
+  font-family: var(--tech);
+  font-size: clamp(1.02rem, 2.2vw, 1.3rem);
+  font-weight: 400; text-transform: uppercase; letter-spacing: .04em;
+}
+/* la flecha reemplaza a la barra: dice que uno se convierte en el otro */
+.sec__arrow{ flex: none; color: var(--accent); margin-top: 1px; }
+.sec__meta{ margin: 0; font-family: var(--tech); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
 
 /* ============ panel antes / despues ============ */
 .panel{
@@ -186,15 +247,15 @@ html.dragging, html.dragging *{ cursor: grabbing !important; }
   column-gap: 20px; row-gap: 11px; align-items: center;
 }
 .metric__head{ grid-column: 1; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-.metric__label{ font-size: 15px; font-weight: 500; letter-spacing: -0.015em; }
-.metric__hint{ font-family: var(--mono); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.metric__label{ font-family: var(--tech); font-size: 13px; font-weight: 400; letter-spacing: .01em; }
+.metric__hint{ font-family: var(--tech); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
 .metric__delta{
   grid-column: 2; grid-row: 1 / span 3; justify-self: end; text-align: right;
-  font-family: var(--mono); font-weight: 700; font-size: clamp(15px, 2.2vw, 19px);
+  font-family: var(--tech); font-weight: 700; font-size: clamp(15px, 2.2vw, 19px);
   color: var(--accent); font-variant-numeric: tabular-nums;
 }
 .track{ grid-column: 1; display: grid; grid-template-columns: 52px minmax(0,1fr) 70px; align-items: center; gap: 12px; }
-.track__name{ font-family: var(--mono); font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+.track__name{ font-family: var(--tech); font-size: 9.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
 .bar{ height: 6px; background: var(--line-soft); position: relative; overflow: hidden; }
 .bar i{
   position: absolute; inset: 0; transform-origin: left center;
@@ -207,28 +268,39 @@ html.dragging, html.dragging *{ cursor: grabbing !important; }
   box-shadow: 0 0 22px -4px var(--bar-glow);
 }
 .track__val{
-  justify-self: end; font-family: var(--mono); font-size: 14px;
+  justify-self: end; font-family: var(--tech); font-size: 14px;
   font-variant-numeric: tabular-nums; color: var(--muted);
 }
 .track--after .track__val{ color: var(--fg); font-weight: 700; }
 .track__val u{ text-decoration: none; font-size: 10px; color: var(--muted); margin-left: 2px; }
 .panel__foot{
   margin: 0; padding-top: 16px; border-top: 1px solid var(--line-soft);
-  font-family: var(--mono); font-size: 10.5px; line-height: 1.75; letter-spacing: .04em; color: var(--muted);
+  font-family: var(--prose); font-size: 12.5px; line-height: 1.65; color: var(--muted);
 }
 
 /* ============ numeros ============ */
+/* dos cajas sueltas, no una dividida: cada dato se sostiene solo */
 .stats{
-  display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 1px;
-  background: var(--line-soft); border: 1px solid var(--line-soft);
+  display: grid; grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: clamp(14px, 1.8vw, 20px);
 }
-.stat{ background: var(--ink); padding: 24px clamp(14px, 2.4vw, 28px); }
+.stat{
+  background: linear-gradient(180deg, var(--panel), var(--ink-2));
+  border: 1px solid var(--line);
+  padding: clamp(24px, 3.2vw, 34px) clamp(16px, 2.4vw, 28px);
+  text-align: center;
+}
 .stat__n{
-  font-size: clamp(2rem, 5.2vw, 3.1rem); font-weight: 700; letter-spacing: -0.05em;
+  font-family: var(--tech);
+  font-size: clamp(1.85rem, 4.6vw, 2.75rem); font-weight: 700; letter-spacing: -0.02em;
   line-height: 1; font-variant-numeric: tabular-nums;
 }
-.stat__n s{ text-decoration: none; color: var(--accent); }
-.stat__l{ margin-top: 10px; font-family: var(--mono); font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+/* la unidad no es el dato: en em, asi acompaña al numero en cada tamaño */
+.stat__n s{
+  text-decoration: none; color: var(--accent);
+  font-size: .38em; font-weight: 400; letter-spacing: .06em;
+}
+.stat__l{ margin-top: 10px; font-family: var(--tech); font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
 
 /* ============ pasos ============ */
 .steps{
@@ -236,8 +308,12 @@ html.dragging, html.dragging *{ cursor: grabbing !important; }
   gap: clamp(18px, 2.6vw, 30px); list-style: none; margin: 0; padding: 0;
 }
 .step{ border-top: 1px solid var(--line); padding-top: 16px; }
-.step__n{ font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em; color: var(--accent); }
-.step__t{ margin: 12px 0 6px; font-size: 16.5px; font-weight: 600; letter-spacing: -0.02em; }
+.step__n{ font-family: var(--tech); font-size: 10.5px; letter-spacing: .16em; color: var(--accent); }
+.step__t{
+  margin: 12px 0 7px;
+  font-family: var(--tech); font-size: 13.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em;
+}
 .step__d{ margin: 0; font-size: 14px; color: var(--muted); }
 
 /* ============ cierre ============ */
@@ -245,15 +321,19 @@ html.dragging, html.dragging *{ cursor: grabbing !important; }
 .close .eyebrow{ justify-content: center; }
 .close__h{
   margin: 20px auto 0; max-width: 22ch;
-  font-size: clamp(2.4rem, 8vw, 4.6rem); font-weight: 700; line-height: .95;
-  letter-spacing: -0.045em; text-wrap: balance;
+  /* misma familia que el titular, pero en regular: es un cierre, no
+     un segundo titulo compitiendo con el de arriba */
+  font-family: var(--tech);
+  font-size: clamp(1.9rem, 6.2vw, 3.7rem); font-weight: 400; line-height: 1.02;
+  text-transform: uppercase; letter-spacing: -0.005em;
+  text-wrap: balance;
 }
 .close .actions{ justify-content: center; margin-top: 32px; }
 
 .foot{
   border-top: 1px solid var(--line-soft); padding-block: 22px 34px;
   display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+  font-family: var(--tech); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
 }
 .foot a:hover{ color: var(--fg); }
 
@@ -275,9 +355,10 @@ html.dragging, html.dragging *{ cursor: grabbing !important; }
 @media (max-width: 620px){
   .top__in{ height: 56px; }
   .brand__name{ font-size: 10px; letter-spacing: .14em; }
+  .brand__mark{ height: 26px; }
   .top__right{ gap: 10px; }
   .stats{ grid-template-columns: 1fr; }
-  .stat{ padding: 18px 16px; }
+  .stat{ padding: 24px 16px; }
   .metric{ grid-template-columns: minmax(0,1fr) 62px; column-gap: 12px; }
   .track{ grid-template-columns: 42px minmax(0,1fr) 60px; gap: 9px; }
   .track__val{ font-size: 13px; }
@@ -288,6 +369,15 @@ html.dragging, html.dragging *{ cursor: grabbing !important; }
    queda el monograma como marca */
 @media (max-width: 430px){
   .brand__name{ display: none; }
+}
+/* el titulo va en renglones fijos (nowrap), asi que en pantallas muy
+   angostas el que cede es el cuerpo, no el corte de linea. El renglon mas
+   largo de los 6 idiomas es MAIS RAPIDO / PLUS RAPIDE, 11 caracteres. */
+@media (max-width: 350px){
+  .hero__h1{ font-size: 2.15rem; }
+  /* "¿ARRANCAMOS?" es una sola palabra de 12 caracteres: no puede
+     cortar en dos renglones, asi que el que cede es el cuerpo */
+  .close__h{ font-size: 1.6rem; }
 }
 @media (prefers-reduced-motion: reduce){
   html{ scroll-behavior: auto; }

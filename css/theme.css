@@ -49,6 +49,12 @@
   --muted:         hsl(from var(--brand) calc(h - 8)     calc(s * .06912) 57.4510%);
   --graphite:      hsl(from var(--brand) calc(h - 22.5)  calc(s * .06897) 22.7451%);
 
+  /* --- escudo del logo: el original es azul #013067 / #001A3D, o sea el
+         mismo tono con dos claridades. Aca sale del brand como todo lo
+         demas, asi el logo acompaña al color del sitio. --- */
+  --logo-field:    hsl(from var(--brand) h s 20%);   /* mitad izquierda */
+  --logo-shade:    hsl(from var(--brand) h s 12%);   /* mitad derecha */
+
   /* --- transparencias: los mismos colores, con alfa --- */
   --line:          rgb(from var(--fg) r g b / .10);        /* bordes */
   --line-soft:     rgb(from var(--fg) r g b / .055);       /* hairlines entre secciones */
@@ -75,8 +81,9 @@
 
 
   /* --- tipografia y medidas (no dependen del color) --- */
-  --display: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
-  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* --tech: titulos, etiquetas y datos.  --prose: texto de lectura. */
+  --tech: 'Quantico', 'Arial Narrow', Arial, sans-serif;
+  --prose: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
   --pad: clamp(28px, 5vw, 56px);   /* margen lateral: 28px en mobile, 56 en desktop */
   --maxw: 1120px;
   --ease: cubic-bezier(.2,.7,.2,1);

@@ -6,3 +6,7 @@ Thumbs.db
 Desktop.ini
 .DS_Store
 __pycache__/
+
+# sobras del dictado por voz del editor
+Speech.mp3
+peaks/

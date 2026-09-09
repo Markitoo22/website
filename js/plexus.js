@@ -30,15 +30,23 @@
 
   var C = palette(['plexus-near', 'plexus-mid', 'plexus-far', 'plexus-ptr', 'node', 'node-hot', 'brand', 'ink']);
 
-  /* ---------- favicon derivado de --brand (solo version standalone) ---------- */
+  /* ---------- favicon: el mismo escudo del header ----------
+     Se clona el SVG inline y se le reemplazan los var(--...) por el color
+     ya resuelto, porque un data: URI no ve el CSS de la pagina. Asi el
+     dibujo vive en un solo lugar y el icono acompaña a --brand. */
   var icon = document.querySelector('link[rel="icon"][data-brandable]');
-  if (icon) {
-    icon.href = 'data:image/svg+xml,' + encodeURIComponent(
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">' +
-      '<rect width="32" height="32" fill="' + C.ink + '"/>' +
-      '<rect x="7" y="7" width="18" height="18" fill="none" stroke="' + C.brand + '" stroke-width="3"/>' +
-      '</svg>'
-    );
+  var logo = document.getElementById('logo-ml');
+  if (icon && logo && window.XMLSerializer) {
+    var clon = logo.cloneNode(true);
+    var origen = logo.querySelectorAll('path');
+    var copia = clon.querySelectorAll('path');
+    for (var f = 0; f < origen.length; f++) {
+      copia[f].setAttribute('fill', window.getComputedStyle(origen[f]).fill);
+    }
+    clon.removeAttribute('class');
+    clon.removeAttribute('id');
+    clon.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    icon.href = 'data:image/svg+xml,' + encodeURIComponent(new XMLSerializer().serializeToString(clon));
   }
 
   /* ---------- canvas ---------- */
@@ -194,17 +202,42 @@
   }
 
   /* ---------- entradas y conteo ---------- */
-  /* el idioma lo deja puesto js/i18n.js, que corre antes */
-  var nf = new Intl.NumberFormat(document.documentElement.lang || 'es');
+  /* formatea con el idioma activo; lo expone js/i18n.js, que corre antes */
+  var fmt = window.mlpcNumero || function (v) { return String(v); };
+
+  function decimales(raw) {
+    return raw.split('.').length > 1 ? raw.split('.')[1].length : 0;
+  }
 
   function countUp(el) {
-    var end = parseFloat(el.getAttribute('data-count'));
+    var inicial = el.getAttribute('data-count');
     var t0 = window.performance.now(), dur = 900;
+
     window.requestAnimationFrame(function tick(now) {
+      var raw = el.getAttribute('data-count');
+
+      /* El precio puede cambiar en el medio de la animacion: la moneda la
+         define la IP y llega unos 200 ms despues del primer pintado. Si eso
+         pasa, se corta y se escribe el valor final; si no, la animacion
+         seguiria mostrando el monto viejo con la moneda nueva
+         (89.999 USD, o sea 89 mil dolares). */
+      if (raw !== inicial) {
+        el.textContent = fmt(parseFloat(raw), decimales(raw));
+        return;
+      }
+
       var p = Math.min(1, (now - t0) / dur);
-      el.textContent = nf.format(Math.round(end * (1 - Math.pow(1 - p, 3))));
+      /* sin Math.round: el precio en USD tiene decimales (89.99) */
+      el.textContent = fmt(parseFloat(raw) * (1 - Math.pow(1 - p, 3)), decimales(raw));
       if (p < 1) window.requestAnimationFrame(tick);
     });
+  }
+
+  /* Las entradas y el conteo arrancan cuando js/i18n.js levanta la compuerta:
+     antes de eso el contenido esta oculto y la animacion se desperdiciaria. */
+  function alLevantarse(fn) {
+    if (window.mlpcListo) fn();
+    else document.addEventListener('mlpc:listo', fn, { once: true });
   }
 
   if ('IntersectionObserver' in window && !reduce) {
@@ -217,13 +250,15 @@
       });
     }, { threshold: 0.15, rootMargin: '0px 0px -6% 0px' });
 
-    Array.prototype.forEach.call(document.querySelectorAll('[data-reveal]'), function (el) {
-      if (el.getBoundingClientRect().top < window.innerHeight * 0.9) {
-        Array.prototype.forEach.call(el.querySelectorAll('[data-count]'), countUp);
-        return;                                        /* ya visible: sin animacion de entrada */
-      }
-      el.classList.add('armed');
-      io.observe(el);
+    alLevantarse(function () {
+      Array.prototype.forEach.call(document.querySelectorAll('[data-reveal]'), function (el) {
+        if (el.getBoundingClientRect().top < window.innerHeight * 0.9) {
+          Array.prototype.forEach.call(el.querySelectorAll('[data-count]'), countUp);
+          return;                                      /* ya visible: sin animacion de entrada */
+        }
+        el.classList.add('armed');
+        io.observe(el);
+      });
     });
   }
 })();

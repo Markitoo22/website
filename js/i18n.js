@@ -3,20 +3,24 @@
 
    Que idioma se muestra, en este orden:
      1. ?lang=xx en la URL          (para compartir un link ya traducido)
-     2. la eleccion guardada        (si el visitante toco el selector)
-     3. EL PAIS DE SU IP            (de donde se conecta de verdad)
-     4. la zona horaria del equipo  (pintado instantaneo y respaldo)
-     5. el idioma del navegador
-     6. ingles
+     2. EL PAIS DE SU IP            (de donde se conecta de verdad)
+     3. la zona horaria del equipo  (pintado instantaneo y respaldo)
+     4. el idioma del navegador
+     5. ingles
 
-   Como el pais lo resuelve un servicio externo, la pagina no lo espera:
-   pinta al instante con la zona horaria y, cuando llega la respuesta de
-   la IP (~200 ms), reescribe los textos si dio otro idioma. El pais
-   queda cacheado 12 h, asi que a partir de la segunda visita el idioma
-   correcto sale de una, sin llamada.
+   NO GUARDA NADA. El selector del header cambia el idioma solo para ese
+   momento: al recargar, se vuelve a detectar de cero. Asi el idioma
+   siempre refleja de donde se esta conectando el visitante, y probar con
+   una VPN no arrastra el resultado de la prueba anterior.
 
-   Si el servicio falla, tarda o lo bloquea un adblocker, no pasa nada:
-   se queda lo que decidio la zona horaria.
+   El contenido NO se muestra hasta que esten resueltos el pais (idioma y
+   moneda) y las fuentes: eso lo sostiene la compuerta "booting" que arma
+   index.html. Recien despues se muestra y se anima todo. Sin eso se ve el
+   idioma por defecto y el cambio de tipografia en la cara.
+   Techo de espera: 1,2 s; pasado eso se muestra con lo que haya.
+
+   Si el servicio de IP falla, tarda o lo bloquea un adblocker, se muestra
+   con lo que decidio la zona horaria del equipo.
 
    Para AGREGAR un idioma: sumar su bloque a DICT, su codigo a LANGS y
    sus paises a COUNTRY (y sus zonas a ZONES, opcional).
@@ -36,15 +40,13 @@
   var DICT = {
 
     es: {
-      desc: 'Puesta a punto de PC 100% remota: más FPS, menos temperatura, menos ruido. 15 años optimizando equipos.',
-      eyebrow_hero: 'Puesta a punto remota · desde 2011',
-      h1: 'El <em>doble</em> de FPS.<span>La mitad de grados.</span>',
-      sub: 'Optimización remota, medida antes y después. <b>15 años</b> y más de <b>1.400 equipos</b>.',
+      desc: 'Puesta a punto de PC 100% a distancia: más FPS, menos temperatura, menos ruido. 15 años optimizando equipos.',
+      eyebrow_hero: 'Puesta a punto a distancia · desde 2011',
+      h1: '<span>Más <em>rápida</em></span><span>que nueva</span>',
+      sub: 'Optimización a distancia. Más de <b>15 años</b> de experiencia.',
       cta_hero: 'Pedir turno',
       link_results: 'Ver resultados',
-      note_hero: '100% remoto · sin mover la máquina · respondo el mismo día',
-      sec_results: 'Antes / después',
-      rig: 'Ryzen 5 5600 · RTX 3060 · 1080p alto',
+      note_hero: '100% a distancia · sin mover la máquina · respondo el mismo día',
       m_fps: 'FPS promedio',
       m_low: 'FPS 1% low',
       m_temp: 'Temperatura en carga',
@@ -59,19 +61,18 @@
       d_temp: '−27°',
       d_noise: '−14',
       foot_panel: 'Equipo real de un cliente: mismo juego, misma configuración gráfica, misma herramienta de medición.<br>Cada máquina arranca de un estado distinto — el diagnóstico dice cuánto se puede ganar en la tuya.',
-      s_years: 'Años optimizando',
-      s_rigs: 'Equipos afinados',
-      s_session: 'Dura la sesión',
+      s_price: 'Precio por sesión promedio',
+      s_session: 'Duración promedio',
       sec_steps: 'Qué le hago a tu PC',
       steps_meta: '4 pasos · en orden',
-      st1_t: 'Conexión remota',
+      st1_t: 'Conexión a distancia',
       st1_d: 'Ves en pantalla todo lo que hago.',
       st2_t: 'Diagnóstico',
-      st2_d: 'Temperaturas, frametimes y cuellos de botella.',
+      st2_d: 'Verifico el estado general de tu PC.',
       st3_t: 'Afinado',
-      st3_d: 'Undervolt, ventiladores, Windows, drivers y latencia.',
+      st3_d: 'Más de 790 configuraciones.',
       st4_t: 'Verificación',
-      st4_d: 'Benchmark final y los números en la mano.',
+      st4_d: 'Ves las mejoras de la operación.',
       eyebrow_close: 'Cupos limitados por semana',
       close_h: '¿Arrancamos?',
       cta_close: 'Escribime por WhatsApp',
@@ -83,13 +84,11 @@
     en: {
       desc: '100% remote PC tune-up: more FPS, lower temperatures, less noise. 15 years optimizing rigs.',
       eyebrow_hero: 'Remote PC tune-up · since 2011',
-      h1: '<em>Double</em> the FPS.<span>Half the heat.</span>',
-      sub: 'Remote optimization, measured before and after. <b>15 years</b> and <b>1,400+ rigs</b>.',
+      h1: '<span><em>Faster</em></span><span>than new</span>',
+      sub: 'Remote optimization. More than <b>15 years</b> of experience.',
       cta_hero: 'Book a session',
       link_results: 'See results',
       note_hero: '100% remote · your PC never leaves your desk · same-day reply',
-      sec_results: 'Before / after',
-      rig: 'Ryzen 5 5600 · RTX 3060 · 1080p high',
       m_fps: 'Average FPS',
       m_low: '1% low FPS',
       m_temp: 'Temperature under load',
@@ -104,19 +103,18 @@
       d_temp: '−27°',
       d_noise: '−14',
       foot_panel: "A real customer's rig: same game, same graphics settings, same measuring tool.<br>Every machine starts from a different place — the diagnosis tells you what yours can gain.",
-      s_years: 'Years optimizing',
-      s_rigs: 'Rigs tuned',
-      s_session: 'Session length',
+      s_price: 'Average price per session',
+      s_session: 'Average length',
       sec_steps: 'What I do to your PC',
       steps_meta: '4 steps · in order',
       st1_t: 'Remote session',
       st1_d: 'You watch everything I do, on your screen.',
       st2_t: 'Diagnosis',
-      st2_d: 'Temperatures, frametimes and bottlenecks.',
+      st2_d: 'I check the overall state of your PC.',
       st3_t: 'Tuning',
-      st3_d: 'Undervolt, fan curves, Windows, drivers and latency.',
+      st3_d: 'More than 790 settings.',
       st4_t: 'Verification',
-      st4_d: 'Final benchmark, numbers in hand.',
+      st4_d: 'You see the improvements from the session.',
       eyebrow_close: 'Limited slots each week',
       close_h: 'Shall we?',
       cta_close: 'Message me on WhatsApp',
@@ -126,15 +124,13 @@
     },
 
     pt: {
-      desc: 'Otimização de PC 100% remota: mais FPS, menos temperatura, menos ruído. 15 anos otimizando máquinas.',
-      eyebrow_hero: 'Otimização remota · desde 2011',
-      h1: 'O <em>dobro</em> de FPS.<span>Metade dos graus.</span>',
-      sub: 'Otimização remota, medida antes e depois. <b>15 anos</b> e mais de <b>1.400 máquinas</b>.',
+      desc: 'Otimização de PC 100% a distância: mais FPS, menos temperatura, menos ruído. 15 anos otimizando máquinas.',
+      eyebrow_hero: 'Otimização a distância · desde 2011',
+      h1: '<span>Mais <em>rápido</em></span><span>que novo</span>',
+      sub: 'Otimização à distância. Mais de <b>15 anos</b> de experiência.',
       cta_hero: 'Agendar sessão',
       link_results: 'Ver resultados',
-      note_hero: '100% remoto · sem sair de casa · respondo no mesmo dia',
-      sec_results: 'Antes / depois',
-      rig: 'Ryzen 5 5600 · RTX 3060 · 1080p alto',
+      note_hero: '100% a distância · sem sair de casa · respondo no mesmo dia',
       m_fps: 'FPS médio',
       m_low: 'FPS 1% low',
       m_temp: 'Temperatura em carga',
@@ -149,19 +145,18 @@
       d_temp: '−27°',
       d_noise: '−14',
       foot_panel: 'Máquina real de um cliente: mesmo jogo, mesma configuração gráfica, mesma ferramenta de medição.<br>Cada máquina parte de um estado diferente — o diagnóstico diz quanto a sua pode ganhar.',
-      s_years: 'Anos otimizando',
-      s_rigs: 'Máquinas ajustadas',
-      s_session: 'Duração da sessão',
+      s_price: 'Preço médio por sessão',
+      s_session: 'Duração média',
       sec_steps: 'O que eu faço no seu PC',
       steps_meta: '4 passos · em ordem',
-      st1_t: 'Conexão remota',
+      st1_t: 'Conexão a distância',
       st1_d: 'Você vê na tela tudo o que eu faço.',
       st2_t: 'Diagnóstico',
-      st2_d: 'Temperaturas, frametimes e gargalos.',
+      st2_d: 'Verifico o estado geral do seu PC.',
       st3_t: 'Ajuste',
-      st3_d: 'Undervolt, ventoinhas, Windows, drivers e latência.',
+      st3_d: 'Mais de 790 configurações.',
       st4_t: 'Verificação',
-      st4_d: 'Benchmark final e os números na mão.',
+      st4_d: 'Você vê as melhorias da operação.',
       eyebrow_close: 'Vagas limitadas por semana',
       close_h: 'Vamos?',
       cta_close: 'Fale comigo no WhatsApp',
@@ -174,13 +169,11 @@
     fr: {
       desc: 'Optimisation PC 100 % à distance : plus de FPS, moins de chaleur, moins de bruit. 15 ans de métier.',
       eyebrow_hero: 'Optimisation PC à distance · depuis 2011',
-      h1: '<em>Deux fois</em> plus de FPS.<span>Deux fois moins chaud.</span>',
-      sub: 'Optimisation à distance, mesurée avant et après. <b>15 ans</b> et plus de <b>1 400 machines</b>.',
+      h1: '<span>Plus <em>rapide</em></span><span>que neuf</span>',
+      sub: 'Optimisation à distance. Plus de <b>15 ans</b> d’expérience.',
       cta_hero: 'Réserver une session',
       link_results: 'Voir les résultats',
       note_hero: '100 % à distance · sans déplacer la machine · réponse le jour même',
-      sec_results: 'Avant / après',
-      rig: 'Ryzen 5 5600 · RTX 3060 · 1080p élevé',
       m_fps: 'FPS moyens',
       m_low: 'FPS 1% low',
       m_temp: 'Température en charge',
@@ -195,19 +188,18 @@
       d_temp: '−27°',
       d_noise: '−14',
       foot_panel: "Machine réelle d'un client : même jeu, mêmes réglages graphiques, même outil de mesure.<br>Chaque machine part d'un état différent — le diagnostic dit ce que la vôtre peut gagner.",
-      s_years: "Ans d'optimisation",
-      s_rigs: 'Machines optimisées',
-      s_session: 'Durée de la session',
+      s_price: 'Prix moyen par session',
+      s_session: 'Durée moyenne',
       sec_steps: 'Ce que je fais à votre PC',
       steps_meta: '4 étapes · dans l’ordre',
       st1_t: 'Connexion à distance',
       st1_d: "Vous voyez à l'écran tout ce que je fais.",
       st2_t: 'Diagnostic',
-      st2_d: "Températures, frametimes et goulots d'étranglement.",
+      st2_d: "Je vérifie l'état général de votre PC.",
       st3_t: 'Réglages',
-      st3_d: 'Undervolt, ventilateurs, Windows, pilotes et latence.',
+      st3_d: 'Plus de 790 réglages.',
       st4_t: 'Vérification',
-      st4_d: 'Benchmark final, chiffres en main.',
+      st4_d: "Vous voyez les améliorations de l'intervention.",
       eyebrow_close: 'Places limitées chaque semaine',
       close_h: 'On commence ?',
       cta_close: 'Écrivez-moi sur WhatsApp',
@@ -217,15 +209,13 @@
     },
 
     de: {
-      desc: '100 % remote PC-Optimierung: mehr FPS, weniger Hitze, weniger Lärm. 15 Jahre Erfahrung.',
-      eyebrow_hero: 'Remote PC-Optimierung · seit 2011',
-      h1: '<em>Doppelt</em> so viele FPS.<span>Halb so heiß.</span>',
-      sub: 'Remote-Optimierung, vorher und nachher gemessen. <b>15 Jahre</b> und über <b>1.400 Rechner</b>.',
+      desc: 'PC-Optimierung aus der Ferne: mehr FPS, weniger Hitze, weniger Lärm. 15 Jahre Erfahrung.',
+      eyebrow_hero: 'PC-Optimierung per Fernwartung · seit 2011',
+      h1: '<span><em>Schneller</em></span><span>als neu</span>',
+      sub: 'Optimierung aus der Ferne. Über <b>15 Jahre</b> Erfahrung.',
       cta_hero: 'Termin buchen',
       link_results: 'Ergebnisse ansehen',
-      note_hero: '100 % remote · der Rechner bleibt bei dir · Antwort am selben Tag',
-      sec_results: 'Vorher / nachher',
-      rig: 'Ryzen 5 5600 · RTX 3060 · 1080p hoch',
+      note_hero: '100 % aus der Ferne · der Rechner bleibt bei dir · Antwort am selben Tag',
       m_fps: 'Durchschnittliche FPS',
       m_low: '1% low FPS',
       m_temp: 'Temperatur unter Last',
@@ -240,19 +230,18 @@
       d_temp: '−27°',
       d_noise: '−14',
       foot_panel: 'Echter Rechner eines Kunden: gleiches Spiel, gleiche Grafikeinstellungen, gleiches Messwerkzeug.<br>Jede Maschine startet anders — die Diagnose zeigt, was bei dir drin ist.',
-      s_years: 'Jahre Optimierung',
-      s_rigs: 'Optimierte Rechner',
-      s_session: 'Dauer der Sitzung',
+      s_price: 'Durchschnittspreis pro Sitzung',
+      s_session: 'Durchschnittliche Dauer',
       sec_steps: 'Was ich mit deinem PC mache',
       steps_meta: '4 Schritte · der Reihe nach',
-      st1_t: 'Remote-Verbindung',
+      st1_t: 'Fernzugriff',
       st1_d: 'Du siehst auf dem Bildschirm alles, was ich mache.',
       st2_t: 'Diagnose',
-      st2_d: 'Temperaturen, Frametimes und Flaschenhälse.',
+      st2_d: 'Ich prüfe den Gesamtzustand deines PCs.',
       st3_t: 'Feinabstimmung',
-      st3_d: 'Undervolt, Lüfterkurven, Windows, Treiber, Latenz.',
+      st3_d: 'Über 790 Einstellungen.',
       st4_t: 'Nachweis',
-      st4_d: 'Abschluss-Benchmark, Zahlen auf dem Tisch.',
+      st4_d: 'Du siehst, was die Optimierung gebracht hat.',
       eyebrow_close: 'Begrenzte Plätze pro Woche',
       close_h: 'Legen wir los?',
       cta_close: 'Schreib mir auf WhatsApp',
@@ -262,15 +251,13 @@
     },
 
     it: {
-      desc: 'Ottimizzazione PC 100% da remoto: più FPS, meno temperatura, meno rumore. 15 anni di esperienza.',
-      eyebrow_hero: 'Ottimizzazione PC da remoto · dal 2011',
-      h1: 'Il <em>doppio</em> di FPS.<span>Metà dei gradi.</span>',
-      sub: 'Ottimizzazione da remoto, misurata prima e dopo. <b>15 anni</b> e oltre <b>1.400 macchine</b>.',
+      desc: 'Ottimizzazione PC 100% a distanza: più FPS, meno temperatura, meno rumore. 15 anni di esperienza.',
+      eyebrow_hero: 'Ottimizzazione PC a distanza · dal 2011',
+      h1: '<span>Più <em>veloce</em></span><span>che nuovo</span>',
+      sub: 'Ottimizzazione a distanza. Oltre <b>15 anni</b> di esperienza.',
       cta_hero: 'Prenota una sessione',
       link_results: 'Vedi i risultati',
-      note_hero: "100% da remoto · il PC resta dov'è · risposta lo stesso giorno",
-      sec_results: 'Prima / dopo',
-      rig: 'Ryzen 5 5600 · RTX 3060 · 1080p alto',
+      note_hero: "100% a distanza · il PC resta dov'è · risposta lo stesso giorno",
       m_fps: 'FPS medi',
       m_low: 'FPS 1% low',
       m_temp: 'Temperatura sotto carico',
@@ -285,19 +272,18 @@
       d_temp: '−27°',
       d_noise: '−14',
       foot_panel: 'Macchina reale di un cliente: stesso gioco, stesse impostazioni grafiche, stesso strumento di misura.<br>Ogni macchina parte da uno stato diverso — la diagnosi dice quanto puoi guadagnare sulla tua.',
-      s_years: 'Anni di ottimizzazione',
-      s_rigs: 'Macchine ottimizzate',
-      s_session: 'Durata della sessione',
+      s_price: 'Prezzo medio per sessione',
+      s_session: 'Durata media',
       sec_steps: 'Cosa faccio al tuo PC',
       steps_meta: '4 passi · in ordine',
-      st1_t: 'Connessione remota',
+      st1_t: 'Connessione a distanza',
       st1_d: 'Vedi sullo schermo tutto quello che faccio.',
       st2_t: 'Diagnosi',
-      st2_d: 'Temperature, frametime e collo di bottiglia.',
+      st2_d: 'Verifico lo stato generale del tuo PC.',
       st3_t: 'Messa a punto',
-      st3_d: 'Undervolt, ventole, Windows, driver e latenza.',
+      st3_d: 'Oltre 790 impostazioni.',
       st4_t: 'Verifica',
-      st4_d: 'Benchmark finale, numeri alla mano.',
+      st4_d: "Vedi i miglioramenti dell'intervento.",
       eyebrow_close: 'Posti limitati ogni settimana',
       close_h: 'Partiamo?',
       cta_close: 'Scrivimi su WhatsApp',
@@ -347,15 +333,30 @@
   };
 
   /* Dos proveedores sin API key, con CORS abierto. Si el primero no
-     contesta en 2,5 s se prueba el segundo. */
+     contesta en 900 ms se prueba el segundo: la pagina entera espera 1,2 s. */
   var GEO = [
     { url: 'https://api.country.is/', pick: function (j) { return j.country; } },
     { url: 'https://get.geojs.io/v1/ip/country.json', pick: function (j) { return j.country; } }
   ];
 
-  var STORE = 'mlpc.lang';
-  var GEO_STORE = 'mlpc.country';
-  var GEO_TTL = 12 * 60 * 60 * 1000;
+  /* Nombres para el menu del header, en su propio idioma. */
+  var NAMES = { es: 'Español', en: 'English', pt: 'Português', fr: 'Français', de: 'Deutsch', it: 'Italiano' };
+
+  /* ---------- PRECIO ----------
+     Solo dos monedas. La moneda sigue al PAIS, no al idioma: un mexicano
+     lee la pagina en español y paga en USD; un argentino con Windows en
+     ingles la lee en ingles y paga en ARS.
+     El monto va como lo entiende JS (punto decimal) y se formatea despues
+     segun el idioma: 89999 -> "89.999" en es, "89,999" en en. */
+  var PRECIOS = {
+    AR:     { monto: '89999', moneda: 'ARS' },
+    resto:  { monto: '89.99', moneda: 'USD' }
+  };
+
+  /* Zonas horarias argentinas, para acertar la moneda en el primer pintado
+     mientras viaja la respuesta de la IP. */
+  var ZONAS_AR = ['America/Argentina', 'America/Buenos_Aires', 'America/Cordoba',
+                  'America/Mendoza', 'America/Catamarca', 'America/Jujuy', 'America/Rosario'];
 
   function supported(code) {
     if (!code) return null;
@@ -384,8 +385,52 @@
     return null;
   }
 
-  function stored() {
-    try { return supported(localStorage.getItem(STORE)); } catch (e) { return null; }
+  /* --- numeros: un solo formateador para toda la pagina --- */
+
+  var cache = {};
+  function decimales(txt) {
+    var punto = String(txt).split('.');
+    return punto.length > 1 ? punto[1].length : 0;
+  }
+  /* lo usa tambien el conteo animado de js/plexus.js */
+  window.mlpcNumero = function (valor, dec) {
+    var lang = document.documentElement.lang || 'es';
+    var k = lang + '|' + dec;
+    if (!cache[k]) {
+      cache[k] = new Intl.NumberFormat(lang, {
+        minimumFractionDigits: dec, maximumFractionDigits: dec
+      });
+    }
+    return cache[k].format(valor);
+  };
+
+  function pintarNumeros() {
+    var nodes = document.querySelectorAll('[data-count]');
+    for (var i = 0; i < nodes.length; i++) {
+      var v = nodes[i].getAttribute('data-count');
+      nodes[i].textContent = window.mlpcNumero(parseFloat(v), decimales(v));
+    }
+  }
+
+  /* --- precio --- */
+
+  function zonaEsAR() {
+    var tz;
+    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { return false; }
+    for (var i = 0; i < ZONAS_AR.length; i++) {
+      if (tz.indexOf(ZONAS_AR[i]) === 0) return true;
+    }
+    return false;
+  }
+
+  function pintarPrecio(esAR) {
+    var p = esAR ? PRECIOS.AR : PRECIOS.resto;
+    var monto = document.getElementById('price');
+    var moneda = document.getElementById('currency');
+    if (!monto || !moneda) return;
+    monto.setAttribute('data-count', p.monto);
+    monto.textContent = window.mlpcNumero(parseFloat(p.monto), decimales(p.monto));
+    moneda.textContent = ' ' + p.moneda;
   }
 
   /* --- pais de la IP --- */
@@ -399,14 +444,6 @@
     return FALLBACK;                       /* pais conocido, idioma que no tenemos */
   }
 
-  function countryCached() {
-    try {
-      var raw = JSON.parse(localStorage.getItem(GEO_STORE) || 'null');
-      if (raw && raw.c && Date.now() - raw.t < GEO_TTL) return raw.c;
-    } catch (e) {}
-    return null;
-  }
-
   function countryFetch(done) {
     if (!window.fetch) return done(null);
     var i = 0;
@@ -414,14 +451,13 @@
       if (i >= GEO.length) return done(null);
       var p = GEO[i++];
       var ctl = window.AbortController ? new AbortController() : null;
-      var timer = window.setTimeout(function () { if (ctl) ctl.abort(); }, 2500);
+      var timer = window.setTimeout(function () { if (ctl) ctl.abort(); }, 900);
       window.fetch(p.url, ctl ? { signal: ctl.signal } : undefined)
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (j) {
           window.clearTimeout(timer);
           var cc = j && p.pick(j);
           if (!cc) return next();
-          try { localStorage.setItem(GEO_STORE, JSON.stringify({ c: cc, t: Date.now() })); } catch (e) {}
           done(cc);
         })
         .catch(function () { window.clearTimeout(timer); next(); });
@@ -457,48 +493,155 @@
       nodes[i].href = nodes[i].href.split('?')[0] + '?text=' + encodeURIComponent(t.wa);
     }
 
-    /* separador de miles segun el idioma: 1.400 / 1,400 / 1 400 */
-    var nf = new Intl.NumberFormat(lang);
-    nodes = document.querySelectorAll('[data-count]');
-    for (i = 0; i < nodes.length; i++) {
-      nodes[i].textContent = nf.format(parseFloat(nodes[i].getAttribute('data-count')));
-    }
+    /* separadores segun el idioma: 89.999 / 89,999 · 89,99 / 89.99 */
+    pintarNumeros();
 
     /* aviso de idioma de la sesion: solo si no hablamos el del visitante */
     var covered = SPOKEN.indexOf(lang) > -1;
     nodes = document.querySelectorAll('[data-lang-note]');
     for (i = 0; i < nodes.length; i++) nodes[i].hidden = covered;
 
-    var sel = document.getElementById('lang');
-    if (sel) sel.value = lang;
+    /* selector del header */
+    var code = document.getElementById('langCode');
+    if (code) code.textContent = lang.toUpperCase();
+    nodes = document.querySelectorAll('.lang__opt');
+    for (i = 0; i < nodes.length; i++) {
+      var on = nodes[i].getAttribute('data-lang') === lang;
+      nodes[i].setAttribute('aria-selected', on ? 'true' : 'false');
+    }
   }
 
-  /* --- arranque --- */
+  /* --- fuentes --- */
+
+  function fuentesListas(done) {
+    if (!document.fonts || !document.fonts.load) return done();
+    /* el texto de muestra decide que subconjunto baja: sin acentos, Google
+       sirve solo el basico y despues cambia la tipografia en pantalla */
+    var muestra = 'MÁS RÁPIDA ÜÖÇÃÊ 0123456789';
+    var caras = ['700 1em Quantico', '400 1em Quantico',
+                 '400 1em Archivo', '500 1em Archivo', '600 1em Archivo'];
+    var cargas = [];
+    for (var i = 0; i < caras.length; i++) {
+      try { cargas.push(document.fonts.load(caras[i], muestra)); } catch (e) {}
+    }
+    Promise.all(cargas).then(function () { return document.fonts.ready; })
+      .then(done, done);      /* si alguna falla, se muestra igual */
+  }
+
+  /* --- arranque ---
+     Orden: se resuelven pais (idioma + moneda) y fuentes, se ajusta todo el
+     contenido y AHI se muestra y se anima. Al reves se ve el idioma por
+     defecto y el cambio de tipografia en la cara. */
 
   var q = /[?&]lang=([a-z-]{2,5})/i.exec(location.search);
-  var forced = supported(q && q[1]) || stored();   /* el visitante ya eligio: la IP no manda */
-  var cached = countryCached();
+  var forced = supported(q && q[1]);        /* solo la URL puede tapar a la IP */
 
-  var current = forced || fromCountry(cached) || fromZone() || fromBrowser() || FALLBACK;
+  /* provisorio, todavia detras de la compuerta: si la IP no contesta, esto
+     es lo que se muestra */
+  var current = forced || fromZone() || fromBrowser() || FALLBACK;
   apply(current);
+  pintarPrecio(zonaEsAR());
 
-  /* primera visita: preguntamos el pais y reescribimos si hace falta */
-  if (!forced && !cached) {
-    countryFetch(function (cc) {
-      var byIp = fromCountry(cc);
-      if (byIp && byIp !== current) {
-        current = byIp;
-        apply(current);
-      }
-    });
+  var mostrado = false;
+  function mostrar() {
+    if (mostrado) return;
+    mostrado = true;
+    document.documentElement.classList.remove('booting');
+    window.mlpcListo = true;
+    try { document.dispatchEvent(new CustomEvent('mlpc:listo')); } catch (e) {}
   }
 
-  var select = document.getElementById('lang');
-  if (select) {
-    select.addEventListener('change', function () {
-      current = supported(select.value) || FALLBACK;
-      try { localStorage.setItem(STORE, current); } catch (e) {}
-      apply(current);
+  var faltan = 2;                           /* pais + fuentes */
+  function paso() { if (--faltan <= 0) mostrar(); }
+
+  /* La consulta al pais se hace SIEMPRE, incluso con ?lang= forzado: el
+     idioma se puede elegir, la moneda no. Nada de esto se cachea. */
+  countryFetch(function (cc) {
+    if (cc) {
+      pintarPrecio(String(cc).toUpperCase() === 'AR');
+      if (!forced) {                        /* si eligio idioma, no se lo toca */
+        var byIp = fromCountry(cc);
+        if (byIp && byIp !== current) {
+          current = byIp;
+          apply(current);
+        }
+      }
+    }
+    paso();
+  });
+
+  fuentesListas(paso);
+
+  /* techo: la pagina no espera a nadie mas de 1,2 s */
+  window.setTimeout(mostrar, 1200);
+
+  /* --- selector del header: menu propio, sin guardar nada --- */
+
+  var box = document.getElementById('langBox');
+  var btn = document.getElementById('langBtn');
+  var menu = document.getElementById('langMenu');
+
+  if (box && btn && menu) {
+    /* el menu se arma desde LANGS: agregar un idioma no toca el HTML */
+    var items = '';
+    for (var b = 0; b < LANGS.length; b++) {
+      items += '<button class="lang__opt" type="button" role="option" aria-selected="false" data-lang="' +
+               LANGS[b] + '"><span class="lang__abbr">' + LANGS[b].toUpperCase() + '</span>' +
+               (NAMES[LANGS[b]] || LANGS[b]) + '</button>';
+    }
+    menu.innerHTML = items;
+
+    var opts = menu.querySelectorAll('.lang__opt');
+    var mark = menu.querySelector('[data-lang="' + current + '"]');
+    if (mark) mark.setAttribute('aria-selected', 'true');
+
+    var open = function (yes) {
+      box.classList.toggle('is-open', yes);
+      btn.setAttribute('aria-expanded', yes ? 'true' : 'false');
+      if (yes) {
+        var sel = menu.querySelector('[aria-selected="true"]') || opts[0];
+        if (sel) sel.focus();
+      }
+    };
+
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      open(!box.classList.contains('is-open'));
     });
+
+    for (var n = 0; n < opts.length; n++) {
+      opts[n].addEventListener('click', function () {
+        current = supported(this.getAttribute('data-lang')) || FALLBACK;
+        apply(current);
+        open(false);
+        btn.focus();
+      });
+    }
+
+    /* flechas para moverse, Escape para salir */
+    menu.addEventListener('keydown', function (e) {
+      var list = Array.prototype.slice.call(opts);
+      var at = list.indexOf(document.activeElement);
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        var to = (at + (e.key === 'ArrowDown' ? 1 : -1) + list.length) % list.length;
+        list[to].focus();
+      } else if (e.key === 'Escape' || e.key === 'Tab') {
+        open(false);
+        if (e.key === 'Escape') btn.focus();
+      }
+    });
+
+    btn.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(true); }
+      else if (e.key === 'Escape') open(false);
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!box.contains(e.target)) open(false);
+    });
+    window.addEventListener('scroll', function () {
+      if (box.classList.contains('is-open')) open(false);
+    }, { passive: true });
   }
 })();

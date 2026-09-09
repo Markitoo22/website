@@ -3,12 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" data-i18n-attr="content:desc" content="Puesta a punto de PC 100% remota: más FPS, menos temperatura, menos ruido. 15 años optimizando equipos.">
+<meta name="description" data-i18n-attr="content:desc" content="Puesta a punto de PC 100% a distancia: más FPS, menos temperatura, menos ruido. 15 años optimizando equipos.">
 <!-- el favicon se repinta desde --brand en js/plexus.js -->
 <link rel="icon" data-brandable href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230A0708'/><rect x='7' y='7' width='18' height='18' fill='none' stroke='%23FF2E2E' stroke-width='3'/></svg>">
 <title>ML PC Performance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<!-- adelanta el saludo TLS al servicio que resuelve el pais, asi la consulta
+     de idioma y moneda tarda la mitad -->
+<link rel="preconnect" href="https://api.country.is">
+<script>
+  /* COMPUERTA DE ARRANQUE. Nada se muestra hasta que esten resueltos el
+     idioma, la moneda y las fuentes: si no, se ve el idioma por defecto y
+     el cambio de tipografia en la cara. Lo levanta js/i18n.js.
+     El timeout es la red de seguridad: si algo falla, la pagina aparece
+     igual. Sin JS la clase nunca se agrega y todo se ve normal. */
+  (function () {
+    var r = document.documentElement;
+    r.classList.add('booting');
+    setTimeout(function () { r.classList.remove('booting'); }, 1600);
+  })();
+</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Quantico:wght@400;700&display=swap">
 <link rel="stylesheet" href="css/theme.css">
 <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -24,20 +40,26 @@
   <header class="top" id="top">
     <div class="row top__in">
       <div class="brand">
-        <span class="brand__mark">ML</span>
+        <svg class="brand__mark" id="logo-ml" viewBox="0 0 1000 1041" role="img" aria-label="ML">
+          <path d="M500 0 Q250 43 0 147 L0 570 C0 770 448 1012 500 1041 C552 1012 1000 770 1000 570 L1000 147 Q750 43 500 0 Z" class="l-ink"/>
+          <path d="M500 26 Q250 69 25 163 L25 570 C25 758 451 987 500 1014 C549 987 975 758 975 570 L975 163 Q750 69 500 26 Z" class="l-shade"/>
+          <path d="M500 62 Q250 105 60 185 L60 570 C60 742 455 950 500 975 C545 950 940 742 940 570 L940 185 Q750 105 500 62 Z" class="l-ink"/>
+          <path d="M500 88 Q250 131 85 200 L85 570 C85 730 458 925 500 948 C542 925 915 730 915 570 L915 200 Q750 131 500 88 Z" class="l-field"/>
+          <path d="M500 88 L500 948 C542 925 915 730 915 570 L915 200 Q750 131 500 88 Z" class="l-shade"/>
+          <path d="M155 260 L272 260 L354 440 L445 260 L557 260 L544 293 L544 615 L558 632 L441 632 L455 615 L454 405 L354 575 L252 412 L253 615 L265 632 L154 632 L166 615 L168 293 Z" class="l-ink"/>
+          <path d="M585 260 L702 260 L690 293 L690 550 L858 550 L858 632 L588 632 L600 615 L600 293 Z" class="l-ink"/>
+        </svg>
         <span class="brand__name">PC&nbsp;Performance</span>
       </div>
       <div class="top__right">
-        <span class="lang">
-          <select id="lang" aria-label="Idioma / Language">
-            <option value="es">ES</option>
-            <option value="en">EN</option>
-            <option value="pt">PT</option>
-            <option value="fr">FR</option>
-            <option value="de">DE</option>
-            <option value="it">IT</option>
-          </select>
-        </span>
+        <!-- el menu lo arma js/i18n.js desde su lista de idiomas -->
+        <div class="lang" id="langBox">
+          <button class="lang__btn" id="langBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Idioma / Language">
+            <span class="lang__code" id="langCode">ES</span>
+            <svg class="lang__caret" width="9" height="6" viewBox="0 0 9 6" fill="none" aria-hidden="true"><path d="M1 1l3.5 3.5L8 1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="lang__menu" id="langMenu" role="listbox" aria-label="Idioma / Language"></div>
+        </div>
         <a class="top__cta" href="https://wa.me/5491155870867">
           <span class="dot" aria-hidden="true"></span> WhatsApp
         </a>
@@ -47,9 +69,9 @@
 
   <main>
     <section class="row hero">
-      <p class="eyebrow rise d1"><i aria-hidden="true"></i> <span data-i18n="eyebrow_hero">Puesta a punto remota &middot; desde 2011</span></p>
-      <h1 class="hero__h1 rise d2" data-i18n-html="h1">El <em>doble</em> de FPS.<span>La mitad de grados.</span></h1>
-      <p class="hero__sub rise d3" data-i18n-html="sub">Optimización remota, medida antes y después. <b>15 años</b> y más de <b>1.400 equipos</b>.</p>
+      <p class="eyebrow rise d1"><i aria-hidden="true"></i> <span data-i18n="eyebrow_hero">Puesta a punto a distancia &middot; desde 2011</span></p>
+      <h1 class="hero__h1 rise d2" data-i18n-html="h1"><span>Más <em>rápida</em></span><span>que nueva</span></h1>
+      <p class="hero__sub rise d3" data-i18n-html="sub">Optimización a distancia. Más de <b>15 años</b> de experiencia.</p>
       <div class="actions rise d4">
         <a class="btn" href="https://wa.me/5491155870867">
           <span data-i18n="cta_hero">Pedir turno</span>
@@ -57,14 +79,53 @@
         </a>
         <a class="link" href="#resultados" data-i18n="link_results">Ver resultados</a>
       </div>
-      <p class="note rise d4" data-i18n="note_hero">100% remoto &middot; sin mover la máquina &middot; respondo el mismo día</p>
+      <p class="note rise d4" data-i18n="note_hero">100% a distancia &middot; sin mover la máquina &middot; respondo el mismo día</p>
       <p class="note note--lang rise d4" data-lang-note data-i18n="session_lang" hidden>Las sesiones son en español o inglés.</p>
     </section>
-
+    <section class="row sec" data-reveal>
+      <div class="stats">
+        <div class="stat">
+          <!-- el monto y la moneda los pone js/i18n.js segun el pais -->
+          <div class="stat__n"><span id="price" data-count="89999">89.999</span><s id="currency"> ARS</s></div>
+          <div class="stat__l" data-i18n="s_price">Precio por sesión promedio</div>
+        </div>
+        <div class="stat">
+          <div class="stat__n"><span data-count="90">90</span><s> min</s></div>
+          <div class="stat__l" data-i18n="s_session">Duración promedio</div>
+        </div>
+      </div>
+    </section>
+    <section class="row sec" data-reveal>
+      <div class="sec__head">
+        <h2 class="sec__title" data-i18n="sec_steps">Qué le hago a tu PC</h2>
+        <p class="sec__meta" data-i18n="steps_meta">4 pasos &middot; en orden</p>
+      </div>
+      <ol class="steps">
+        <li class="step">
+          <div class="step__n">01</div>
+          <h3 class="step__t" data-i18n="st1_t">Conexión a distancia</h3>
+          <p class="step__d" data-i18n="st1_d">Ves en pantalla todo lo que hago.</p>
+        </li>
+        <li class="step">
+          <div class="step__n">02</div>
+          <h3 class="step__t" data-i18n="st2_t">Diagnóstico</h3>
+          <p class="step__d" data-i18n="st2_d">Verifico el estado general de tu PC.</p>
+        </li>
+        <li class="step">
+          <div class="step__n">03</div>
+          <h3 class="step__t" data-i18n="st3_t">Afinado</h3>
+          <p class="step__d" data-i18n="st3_d">Más de 790 configuraciones.</p>
+        </li>
+        <li class="step">
+          <div class="step__n">04</div>
+          <h3 class="step__t" data-i18n="st4_t">Verificación</h3>
+          <p class="step__d" data-i18n="st4_d">Ves las mejoras de la operación.</p>
+        </li>
+      </ol>
+    </section>
     <section class="row sec" id="resultados" data-reveal>
       <div class="sec__head">
-        <h2 class="sec__title" data-i18n="sec_results">Antes / después</h2>
-        <p class="sec__meta" data-i18n="rig">Ryzen 5 5600 &middot; RTX 3060 &middot; 1080p alto</p>
+        <h2 class="sec__title"><span data-i18n="before">Antes</span><svg class="sec__arrow" width="26" height="8" viewBox="0 0 26 8" fill="none" aria-hidden="true"><path d="M0 4h23M19.5 .5 23 4l-3.5 3.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-i18n="after">Después</span></h2>
       </div>
 
       <div class="panel">
@@ -99,53 +160,6 @@
         <p class="panel__foot" data-i18n-html="foot_panel">Equipo real de un cliente: mismo juego, misma configuración gráfica, misma herramienta de medición.<br>Cada máquina arranca de un estado distinto — el diagnóstico dice cuánto se puede ganar en la tuya.</p>
       </div>
     </section>
-
-    <section class="row sec" data-reveal>
-      <div class="stats">
-        <div class="stat">
-          <div class="stat__n"><span data-count="15">15</span></div>
-          <div class="stat__l" data-i18n="s_years">Años optimizando</div>
-        </div>
-        <div class="stat">
-          <div class="stat__n"><span data-count="1400">1.400</span><s>+</s></div>
-          <div class="stat__l" data-i18n="s_rigs">Equipos afinados</div>
-        </div>
-        <div class="stat">
-          <div class="stat__n"><span data-count="90">90</span><s> min</s></div>
-          <div class="stat__l" data-i18n="s_session">Dura la sesión</div>
-        </div>
-      </div>
-    </section>
-
-    <section class="row sec" data-reveal>
-      <div class="sec__head">
-        <h2 class="sec__title" data-i18n="sec_steps">Qué le hago a tu PC</h2>
-        <p class="sec__meta" data-i18n="steps_meta">4 pasos &middot; en orden</p>
-      </div>
-      <ol class="steps">
-        <li class="step">
-          <div class="step__n">01</div>
-          <h3 class="step__t" data-i18n="st1_t">Conexión remota</h3>
-          <p class="step__d" data-i18n="st1_d">Ves en pantalla todo lo que hago.</p>
-        </li>
-        <li class="step">
-          <div class="step__n">02</div>
-          <h3 class="step__t" data-i18n="st2_t">Diagnóstico</h3>
-          <p class="step__d" data-i18n="st2_d">Temperaturas, frametimes y cuellos de botella.</p>
-        </li>
-        <li class="step">
-          <div class="step__n">03</div>
-          <h3 class="step__t" data-i18n="st3_t">Afinado</h3>
-          <p class="step__d" data-i18n="st3_d">Undervolt, ventiladores, Windows, drivers y latencia.</p>
-        </li>
-        <li class="step">
-          <div class="step__n">04</div>
-          <h3 class="step__t" data-i18n="st4_t">Verificación</h3>
-          <p class="step__d" data-i18n="st4_d">Benchmark final y los números en la mano.</p>
-        </li>
-      </ol>
-    </section>
-
     <section class="row close" data-reveal>
       <p class="eyebrow"><i aria-hidden="true"></i> <span data-i18n="eyebrow_close">Cupos limitados por semana</span></p>
       <h2 class="close__h" data-i18n="close_h">¿Arrancamos?</h2>

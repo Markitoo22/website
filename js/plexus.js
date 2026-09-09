@@ -6,10 +6,25 @@
 (function () {
   'use strict';
 
+  /* ===== INTERRUPTOR DEL FONDO EN CELULARES =====
+     En false el canvas no se dibuja ni existe en pantallas tactiles.
+     Poner false y recargar es todo lo que hay que hacer para matarlo. */
+  var FONDO_EN_MOBILE = true;
+
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  /* mouse de verdad: excluye tactil, hibridos y la vista mobile del devtools.
-     Sin mouse el fondo igual se mueve, pero no reacciona a nada. */
+  /* mouse de verdad: excluye tactil, hibridos y la vista mobile del devtools. */
   var mouse = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+  var usarFondo = mouse || FONDO_EN_MOBILE;
+
+  /* SOLO SE ANIMA CON MOUSE.
+     Un canvas fijo que se redibuja en cada frame obliga al navegador a
+     re-rasterizar una capa de pantalla completa mientras el compositor mueve
+     la pagina por el scroll. En desktop sobra potencia; en un celular eso
+     pelea con el scroll, con la animacion de la barra de direcciones y con el
+     backdrop-filter del header, y el fondo se ve roto.
+     Dibujado una sola vez, el canvas es una textura que la GPU solo mueve. */
+  var animar = mouse && !reduce;
 
   /* ---------- leer colores resueltos desde el CSS ----------
      Un elemento sonda devuelve el valor ya calculado en rgba(),
@@ -53,8 +68,9 @@
   var canvas = document.getElementById('plexus');
   var ctx = canvas.getContext('2d', { alpha: true });
   var W = 0, H = 0, nodes = [], raf = 0, last = 0;
-  var frameGap = mouse ? 0 : 32;                       /* ~30fps en tactil */
-  var LINK = mouse ? 138 : 112, LINK2 = LINK * LINK;
+  var frameGap = 0;
+  /* mas alcance sin mouse: el dibujo es unico, las lineas no cuestan por frame */
+  var LINK = mouse ? 138 : 132, LINK2 = LINK * LINK;
   var PTR = 190, PTR2 = PTR * PTR;
   var ptr = { x: -9999, y: -9999, on: false };
   var seg = [[], [], []];
@@ -77,7 +93,7 @@
     var caja = canvas.getBoundingClientRect();
     var w = Math.max(1, Math.round(caja.width));
     var h = Math.max(1, Math.round(caja.height));
-    var dpr = Math.min(window.devicePixelRatio || 1, mouse ? 1.75 : 1.4);
+    var dpr = Math.min(window.devicePixelRatio || 1, animar ? 1.75 : 2);
 
     /* los nodos se reescalan, no se rehacen: rearmarlos hace saltar el fondo */
     if (nodes.length && W && H) {
@@ -93,8 +109,9 @@
     canvas.height = Math.round(h * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    var n = Math.round((w * h) / 17000);
-    n = Math.max(14, Math.min(mouse ? 62 : 24, n));    /* menos nodos en celular */
+    /* sin animacion se puede poblar mas del doble: se paga una sola vez */
+    var n = Math.round((w * h) / (animar ? 17000 : 12000));
+    n = Math.max(14, Math.min(animar ? 62 : 46, n));
     while (nodes.length > n) nodes.pop();              /* se ajusta la cantidad */
     while (nodes.length < n) nodes.push(nodo(w, h));   /* sin tocar los que hay */
   }
@@ -170,15 +187,20 @@
     draw();
   }
 
-  function start() { if (!raf && !reduce) raf = window.requestAnimationFrame(loop); }
+  function start() { if (!raf && animar) raf = window.requestAnimationFrame(loop); }
   function stop() { if (raf) { window.cancelAnimationFrame(raf); raf = 0; } }
 
-  build();
-  draw();
-  start();
+  if (usarFondo) {
+    build();
+    draw();
+    start();          /* si no hay mouse, queda ese unico dibujo */
+  } else {
+    canvas.style.display = 'none';
+  }
 
   var rt;
   window.addEventListener('resize', function () {
+    if (!usarFondo) return;
     /* En mobile la barra de direcciones aparece y desaparece al scrollear y
        dispara resize con solo un cambio de alto. Si rearmamos ahi, el fondo
        se mueve solo mientras el visitante scrollea. Reaccionamos al ancho
@@ -190,9 +212,11 @@
     rt = window.setTimeout(function () { build(); draw(); }, 180);
   }, { passive: true });
 
-  document.addEventListener('visibilitychange', function () {
-    if (document.hidden) stop(); else start();
-  });
+  if (animar) {
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) stop(); else start();
+    });
+  }
 
   /* ---------- brillo que sigue al cursor ---------- */
   if (mouse && !reduce) {

@@ -75,6 +75,23 @@ html.dragging, html.dragging *{ cursor: grabbing !important; }
   font-family: var(--mono); font-size: 11px; font-weight: 500;
   letter-spacing: .18em; text-transform: uppercase; color: var(--muted);
 }
+.top__right{ display: flex; align-items: center; gap: 14px; }
+
+/* selector de idioma: select nativo sin cromo, con su propio caret */
+.lang{ display: inline-flex; align-items: center; color: var(--muted); transition: color .25s var(--ease); }
+.lang:hover{ color: var(--fg); }
+.lang::after{
+  content: ""; width: 0; height: 0; margin-left: 5px;
+  border: 3px solid transparent; border-top-color: currentColor; opacity: .8;
+}
+.lang select{
+  appearance: none; -webkit-appearance: none;
+  background: transparent; border: 0; padding: 0; margin: 0;
+  color: inherit; cursor: pointer;
+  font-family: var(--mono); font-size: 11px; font-weight: 500;
+  letter-spacing: .14em; text-transform: uppercase;
+}
+
 .top__cta{
   display: inline-flex; align-items: center; gap: 8px;
   font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
@@ -100,7 +117,8 @@ html.dragging, html.dragging *{ cursor: grabbing !important; }
 .eyebrow i{ display: block; width: 5px; height: 5px; background: var(--accent); flex: none; }
 
 /* ============ hero ============ */
-.hero{ padding: clamp(56px, 11vh, 124px) 0 clamp(44px, 7vh, 80px); }
+/* padding-block, no el shorthand: el horizontal lo pone .row con --pad */
+.hero{ padding-block: clamp(56px, 11vh, 124px) clamp(44px, 7vh, 80px); }
 .hero__h1{
   margin: 22px 0 0;
   font-size: clamp(2.8rem, 9.2vw, 6.4rem);
@@ -140,8 +158,15 @@ html.dragging, html.dragging *{ cursor: grabbing !important; }
 .link:hover{ color: var(--fg); border-color: var(--accent); }
 .note{ margin: 18px 0 0; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; color: var(--muted); }
 
+/* aviso del idioma de la sesion: solo aparece si no hablamos el del visitante */
+.note--lang{ margin-top: 10px; color: var(--fg-2); }
+.note--lang::before{
+  content: ""; display: inline-block; width: 5px; height: 5px;
+  background: var(--accent); margin-right: 8px; vertical-align: 1px;
+}
+
 /* ============ secciones ============ */
-.sec{ padding: clamp(44px, 7vh, 84px) 0; border-top: 1px solid var(--line-soft); }
+.sec{ padding-block: clamp(44px, 7vh, 84px); border-top: 1px solid var(--line-soft); }
 .sec__head{
   display: flex; align-items: baseline; justify-content: space-between;
   gap: 14px 24px; flex-wrap: wrap; margin-bottom: 30px;
@@ -216,7 +241,7 @@ html.dragging, html.dragging *{ cursor: grabbing !important; }
 .step__d{ margin: 0; font-size: 14px; color: var(--muted); }
 
 /* ============ cierre ============ */
-.close{ padding: clamp(60px, 11vh, 116px) 0 clamp(40px, 6vh, 64px); border-top: 1px solid var(--line-soft); text-align: center; }
+.close{ padding-block: clamp(60px, 11vh, 116px) clamp(40px, 6vh, 64px); border-top: 1px solid var(--line-soft); text-align: center; }
 .close .eyebrow{ justify-content: center; }
 .close__h{
   margin: 20px auto 0; max-width: 22ch;
@@ -250,6 +275,7 @@ html.dragging, html.dragging *{ cursor: grabbing !important; }
 @media (max-width: 620px){
   .top__in{ height: 56px; }
   .brand__name{ font-size: 10px; letter-spacing: .14em; }
+  .top__right{ gap: 10px; }
   .stats{ grid-template-columns: 1fr; }
   .stat{ padding: 18px 16px; }
   .metric{ grid-template-columns: minmax(0,1fr) 62px; column-gap: 12px; }
@@ -257,6 +283,11 @@ html.dragging, html.dragging *{ cursor: grabbing !important; }
   .track__val{ font-size: 13px; }
   .steps{ grid-template-columns: 1fr; gap: 16px; }
   .cursor-glow{ display: none; }
+}
+/* con el selector de idioma sumado, el header no cierra abajo de 430px:
+   queda el monograma como marca */
+@media (max-width: 430px){
+  .brand__name{ display: none; }
 }
 @media (prefers-reduced-motion: reduce){
   html{ scroll-behavior: auto; }

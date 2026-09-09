@@ -60,6 +60,34 @@ Lo que quedo del setup viejo y NO hay que tocar:
 
 Se elimino `A @ 23.227.38.65`, que era la IP de Shopify.
 
+## Idiomas
+
+Toda la copy vive en `js/i18n.js` (42 claves x 6 idiomas: es, en, pt, fr, de,
+it). El HTML solo tiene marcas `data-i18n="clave"`, y el texto que quedo
+escrito ahi es el español, que es lo que se ve si el JS no carga.
+
+Que idioma se muestra, en este orden:
+
+1. `?lang=xx` en la URL — sirve para probar: `?lang=de`, `?lang=pt`
+2. lo que el visitante haya elegido en el selector (queda guardado)
+3. **la zona horaria del equipo** (de donde se conecta)
+4. el idioma del navegador
+5. ingles
+
+La zona horaria va antes que el idioma del navegador a proposito: un gamer
+argentino con Windows en ingles tiene que ver la pagina en español. No usa
+geolocalizacion por IP: eso obligaria a llamar a una API externa en cada
+visita, con su latencia y su punto de falla.
+
+**Idiomas que se pueden atender:** `SPOKEN` en `js/i18n.js`, hoy es y en. A
+quien llega en cualquier otro idioma se le avisa antes de que escriba ("las
+sesiones son en español o ingles") y el mensaje que se autocompleta en
+WhatsApp le sale en ingles.
+
+- Agregar un idioma: sumar su bloque a `DICT`, su codigo a `LANGS`, sus zonas
+  horarias a `ZONES` y un `<option>` al selector del header.
+- Sacar uno: borrarlo de `LANGS` y su `<option>`.
+
 ## Cambiar el color de todo el sitio
 
 Una sola linea, en `css/theme.css`:
@@ -76,7 +104,15 @@ Requiere color relativo de CSS: Chrome/Edge 119+, Safari 16.4+, Firefox 128+.
 
 ## Antes de mandarla a produccion
 
-1. Numero de WhatsApp: buscar `5491100000000` en `index.html` (4 lugares,
-   incluido el texto visible del footer).
-2. Los numeros del panel antes/despues, los 1.400 equipos y las 48 h son de
-   ejemplo: confirmarlos con datos reales.
+1. Los numeros del panel antes/despues, los 1.400 equipos y los 90 min de
+   sesion son de ejemplo: confirmarlos con datos reales.
+
+El servicio es 100% REMOTO: nada de la copia puede implicar tocar la maquina
+en persona (desarmar, pasta termica, retiro y entrega a domicilio).
+
+## WhatsApp
+
+Los cuatro botones apuntan a `https://wa.me/5491155870867` con el mensaje ya
+escrito. Formato del link: `54` + `9` (movil) + `11` (area, sin el 0) +
+numero (sin el 15). Si cambia el numero, hay que tocarlo en 4 lugares de
+`index.html`, incluido el texto visible del footer.

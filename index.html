@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Puesta a punto de PC: más FPS, menos temperatura, menos ruido. 15 años optimizando equipos.">
+<meta name="description" data-i18n-attr="content:desc" content="Puesta a punto de PC 100% remota: más FPS, menos temperatura, menos ruido. 15 años optimizando equipos.">
 <!-- el favicon se repinta desde --brand en js/plexus.js -->
 <link rel="icon" data-brandable href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230A0708'/><rect x='7' y='7' width='18' height='18' fill='none' stroke='%23FF2E2E' stroke-width='3'/></svg>">
 <title>ML PC Performance</title>
@@ -27,64 +27,76 @@
         <span class="brand__mark">ML</span>
         <span class="brand__name">PC&nbsp;Performance</span>
       </div>
-      <!-- REEMPLAZAR NUMERO DE WHATSAPP: buscar 5491100000000 (4 lugares) -->
-      <a class="top__cta" href="https://wa.me/5491100000000?text=Hola!%20Quiero%20una%20puesta%20a%20punto%20de%20mi%20PC">
-        <span class="dot" aria-hidden="true"></span> WhatsApp
-      </a>
+      <div class="top__right">
+        <span class="lang">
+          <select id="lang" aria-label="Idioma / Language">
+            <option value="es">ES</option>
+            <option value="en">EN</option>
+            <option value="pt">PT</option>
+            <option value="fr">FR</option>
+            <option value="de">DE</option>
+            <option value="it">IT</option>
+          </select>
+        </span>
+        <a class="top__cta" href="https://wa.me/5491155870867">
+          <span class="dot" aria-hidden="true"></span> WhatsApp
+        </a>
+      </div>
     </div>
   </header>
 
   <main>
     <section class="row hero">
-      <p class="eyebrow rise d1"><i aria-hidden="true"></i> Puesta a punto de PC &middot; desde 2011</p>
-      <h1 class="hero__h1 rise d2">El <em>doble</em> de FPS.<span>La mitad de grados.</span></h1>
-      <p class="hero__sub rise d3">Optimización profesional, medida antes y después. <b>15 años</b> y más de <b>1.400 equipos</b>.</p>
+      <p class="eyebrow rise d1"><i aria-hidden="true"></i> <span data-i18n="eyebrow_hero">Puesta a punto remota &middot; desde 2011</span></p>
+      <h1 class="hero__h1 rise d2" data-i18n-html="h1">El <em>doble</em> de FPS.<span>La mitad de grados.</span></h1>
+      <p class="hero__sub rise d3" data-i18n-html="sub">Optimización remota, medida antes y después. <b>15 años</b> y más de <b>1.400 equipos</b>.</p>
       <div class="actions rise d4">
-        <a class="btn" href="https://wa.me/5491100000000?text=Hola!%20Quiero%20una%20puesta%20a%20punto%20de%20mi%20PC">
-          Pedir turno
+        <a class="btn" href="https://wa.me/5491155870867">
+          <span data-i18n="cta_hero">Pedir turno</span>
           <svg width="15" height="10" viewBox="0 0 15 10" fill="none" aria-hidden="true"><path d="M1 5h12M9 1l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
-        <a class="link" href="#resultados">Ver resultados</a>
+        <a class="link" href="#resultados" data-i18n="link_results">Ver resultados</a>
       </div>
-      <p class="note rise d4">Respondo el mismo día</p>
+      <p class="note rise d4" data-i18n="note_hero">100% remoto &middot; sin mover la máquina &middot; respondo el mismo día</p>
+      <p class="note note--lang rise d4" data-lang-note data-i18n="session_lang" hidden>Las sesiones son en español o inglés.</p>
     </section>
 
     <section class="row sec" id="resultados" data-reveal>
       <div class="sec__head">
-        <h2 class="sec__title">Antes / después</h2>
-        <p class="sec__meta">Ryzen 5 5600 &middot; RTX 3060 &middot; 1080p alto</p>
+        <h2 class="sec__title" data-i18n="sec_results">Antes / después</h2>
+        <p class="sec__meta" data-i18n="rig">Ryzen 5 5600 &middot; RTX 3060 &middot; 1080p alto</p>
       </div>
 
       <div class="panel">
         <div class="metric">
-          <div class="metric__head"><span class="metric__label">FPS promedio</span><span class="metric__hint">más es mejor</span></div>
-          <div class="track"><span class="track__name">Antes</span><div class="bar"><i style="--v:.40"></i></div><span class="track__val" data-count="47">47</span></div>
-          <div class="track track--after"><span class="track__name">Después</span><div class="bar"><i style="--v:1"></i></div><span class="track__val" data-count="118">118</span></div>
-          <div class="metric__delta">&times;2,5</div>
+          <div class="metric__head"><span class="metric__label" data-i18n="m_fps">FPS promedio</span><span class="metric__hint" data-i18n="h_more">más es mejor</span></div>
+          <div class="track"><span class="track__name" data-i18n="before">Antes</span><div class="bar"><i style="--v:.40"></i></div><span class="track__val" data-count="47">47</span></div>
+          <div class="track track--after"><span class="track__name" data-i18n="after">Después</span><div class="bar"><i style="--v:1"></i></div><span class="track__val" data-count="118">118</span></div>
+          <div class="metric__delta" data-i18n="d_fps">&times;2,5</div>
         </div>
 
         <div class="metric">
-          <div class="metric__head"><span class="metric__label">FPS 1% low</span><span class="metric__hint">fluidez real</span></div>
-          <div class="track"><span class="track__name">Antes</span><div class="bar"><i style="--v:.26"></i></div><span class="track__val" data-count="22">22</span></div>
-          <div class="track track--after"><span class="track__name">Después</span><div class="bar"><i style="--v:1"></i></div><span class="track__val" data-count="84">84</span></div>
-          <div class="metric__delta">&times;3,8</div>
+          <div class="metric__head"><span class="metric__label" data-i18n="m_low">FPS 1% low</span><span class="metric__hint" data-i18n="h_low">fluidez real</span></div>
+          <div class="track"><span class="track__name" data-i18n="before">Antes</span><div class="bar"><i style="--v:.26"></i></div><span class="track__val" data-count="22">22</span></div>
+          <div class="track track--after"><span class="track__name" data-i18n="after">Después</span><div class="bar"><i style="--v:1"></i></div><span class="track__val" data-count="84">84</span></div>
+          <div class="metric__delta" data-i18n="d_low">&times;3,8</div>
         </div>
 
         <div class="metric">
-          <div class="metric__head"><span class="metric__label">Temperatura en carga</span><span class="metric__hint">menos es mejor</span></div>
-          <div class="track"><span class="track__name">Antes</span><div class="bar"><i style="--v:1"></i></div><span class="track__val"><span data-count="91">91</span><u>&deg;C</u></span></div>
-          <div class="track track--after"><span class="track__name">Después</span><div class="bar"><i style="--v:.70"></i></div><span class="track__val"><span data-count="64">64</span><u>&deg;C</u></span></div>
-          <div class="metric__delta">&minus;27&deg;</div>
+          <div class="metric__head"><span class="metric__label" data-i18n="m_temp">Temperatura en carga</span><span class="metric__hint" data-i18n="h_less">menos es mejor</span></div>
+          <div class="track"><span class="track__name" data-i18n="before">Antes</span><div class="bar"><i style="--v:1"></i></div><span class="track__val"><span data-count="91">91</span><u>&deg;C</u></span></div>
+          <div class="track track--after"><span class="track__name" data-i18n="after">Después</span><div class="bar"><i style="--v:.70"></i></div><span class="track__val"><span data-count="64">64</span><u>&deg;C</u></span></div>
+          <div class="metric__delta" data-i18n="d_temp">&minus;27&deg;</div>
         </div>
 
         <div class="metric">
-          <div class="metric__head"><span class="metric__label">Ruido</span><span class="metric__hint">menos es mejor</span></div>
-          <div class="track"><span class="track__name">Antes</span><div class="bar"><i style="--v:1"></i></div><span class="track__val"><span data-count="52">52</span><u>dBA</u></span></div>
-          <div class="track track--after"><span class="track__name">Después</span><div class="bar"><i style="--v:.73"></i></div><span class="track__val"><span data-count="38">38</span><u>dBA</u></span></div>
-          <div class="metric__delta">&minus;14</div>
+          <div class="metric__head"><span class="metric__label" data-i18n="m_noise">Ruido</span><span class="metric__hint" data-i18n="h_less">menos es mejor</span></div>
+          <div class="track"><span class="track__name" data-i18n="before">Antes</span><div class="bar"><i style="--v:1"></i></div><span class="track__val"><span data-count="52">52</span><u>dBA</u></span></div>
+          <div class="track track--after"><span class="track__name" data-i18n="after">Después</span><div class="bar"><i style="--v:.73"></i></div><span class="track__val"><span data-count="38">38</span><u>dBA</u></span></div>
+          <div class="metric__delta" data-i18n="d_noise">&minus;14</div>
         </div>
 
-        <p class="panel__foot">Equipo real de un cliente: mismo juego, misma configuración gráfica, misma herramienta de medición.<br>Cada máquina arranca de un estado distinto — el diagnóstico dice cuánto se puede ganar en la tuya.</p>
+        <p class="panel__foot" data-i18n-html="foot_panel">Equipo real de un cliente: mismo juego, misma configuración gráfica, misma herramienta de medición.<br>Cada máquina arranca de un estado distinto — el diagnóstico dice cuánto se puede ganar en la tuya.</p>
       </div>
     </section>
 
@@ -92,66 +104,69 @@
       <div class="stats">
         <div class="stat">
           <div class="stat__n"><span data-count="15">15</span></div>
-          <div class="stat__l">Años optimizando</div>
+          <div class="stat__l" data-i18n="s_years">Años optimizando</div>
         </div>
         <div class="stat">
           <div class="stat__n"><span data-count="1400">1.400</span><s>+</s></div>
-          <div class="stat__l">Equipos afinados</div>
+          <div class="stat__l" data-i18n="s_rigs">Equipos afinados</div>
         </div>
         <div class="stat">
-          <div class="stat__n"><span data-count="48">48</span><s>h</s></div>
-          <div class="stat__l">Entrega promedio</div>
+          <div class="stat__n"><span data-count="90">90</span><s> min</s></div>
+          <div class="stat__l" data-i18n="s_session">Dura la sesión</div>
         </div>
       </div>
     </section>
 
     <section class="row sec" data-reveal>
       <div class="sec__head">
-        <h2 class="sec__title">Qué le hago a tu PC</h2>
-        <p class="sec__meta">4 pasos &middot; en orden</p>
+        <h2 class="sec__title" data-i18n="sec_steps">Qué le hago a tu PC</h2>
+        <p class="sec__meta" data-i18n="steps_meta">4 pasos &middot; en orden</p>
       </div>
       <ol class="steps">
         <li class="step">
           <div class="step__n">01</div>
-          <h3 class="step__t">Diagnóstico</h3>
-          <p class="step__d">Temperaturas, frametimes y cuellos de botella.</p>
+          <h3 class="step__t" data-i18n="st1_t">Conexión remota</h3>
+          <p class="step__d" data-i18n="st1_d">Ves en pantalla todo lo que hago.</p>
         </li>
         <li class="step">
           <div class="step__n">02</div>
-          <h3 class="step__t">Limpieza y térmica</h3>
-          <p class="step__d">Desarme, pasta y pads nuevos, curva de ventiladores.</p>
+          <h3 class="step__t" data-i18n="st2_t">Diagnóstico</h3>
+          <p class="step__d" data-i18n="st2_d">Temperaturas, frametimes y cuellos de botella.</p>
         </li>
         <li class="step">
           <div class="step__n">03</div>
-          <h3 class="step__t">Sistema afinado</h3>
-          <p class="step__d">Windows, drivers, BIOS y latencia.</p>
+          <h3 class="step__t" data-i18n="st3_t">Afinado</h3>
+          <p class="step__d" data-i18n="st3_d">Undervolt, ventiladores, Windows, drivers y latencia.</p>
         </li>
         <li class="step">
           <div class="step__n">04</div>
-          <h3 class="step__t">Verificación</h3>
-          <p class="step__d">Benchmark final y los números en la mano.</p>
+          <h3 class="step__t" data-i18n="st4_t">Verificación</h3>
+          <p class="step__d" data-i18n="st4_d">Benchmark final y los números en la mano.</p>
         </li>
       </ol>
     </section>
 
     <section class="row close" data-reveal>
-      <p class="eyebrow"><i aria-hidden="true"></i> Cupos limitados por semana</p>
-      <h2 class="close__h">¿Arrancamos?</h2>
+      <p class="eyebrow"><i aria-hidden="true"></i> <span data-i18n="eyebrow_close">Cupos limitados por semana</span></p>
+      <h2 class="close__h" data-i18n="close_h">¿Arrancamos?</h2>
       <div class="actions">
-        <a class="btn btn--big" href="https://wa.me/5491100000000?text=Hola!%20Quiero%20una%20puesta%20a%20punto%20de%20mi%20PC">
-          Escribime por WhatsApp
+        <a class="btn btn--big" href="https://wa.me/5491155870867">
+          <span data-i18n="cta_close">Escribime por WhatsApp</span>
           <svg width="15" height="10" viewBox="0 0 15 10" fill="none" aria-hidden="true"><path d="M1 5h12M9 1l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
       </div>
-      <p class="note">Coordinamos día y horario</p>
+      <p class="note" data-i18n="note_close">Coordinamos día y horario</p>
+      <p class="note note--lang" data-lang-note data-i18n="session_lang" hidden>Las sesiones son en español o inglés.</p>
     </section>
   </main>
 
   <footer class="row foot">
     <span>ML PC Performance &middot; 2026</span>
-    <a href="https://wa.me/5491100000000?text=Hola!%20Quiero%20una%20puesta%20a%20punto%20de%20mi%20PC">+54 9 11 0000-0000</a>
+    <a href="https://wa.me/5491155870867">11 5587-0867</a>
   </footer>
 </div>
+
+<script src="js/i18n.js"></script>
 <script src="js/plexus.js"></script>
 <script src="js/drag.js"></script>
 </body>

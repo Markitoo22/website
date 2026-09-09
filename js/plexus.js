@@ -194,7 +194,8 @@
   }
 
   /* ---------- entradas y conteo ---------- */
-  var nf = new Intl.NumberFormat('es-AR');
+  /* el idioma lo deja puesto js/i18n.js, que corre antes */
+  var nf = new Intl.NumberFormat(document.documentElement.lang || 'es');
 
   function countUp(el) {
     var end = parseFloat(el.getAttribute('data-count'));

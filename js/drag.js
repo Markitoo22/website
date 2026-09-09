@@ -39,6 +39,9 @@
 
   window.addEventListener('pointerdown', function (e) {
     if (e.pointerType !== 'mouse' || e.button !== 0) return;
+    /* si el click arranca en un control, es del control: el desplegable
+       del idioma se traga el pointerup y la pagina quedaria arrastrandose */
+    if (e.target.closest && e.target.closest('select, input, textarea, button, [contenteditable]')) return;
     halt();
     dragging = true; pid = e.pointerId; lastY = e.clientY; moved = 0;
     root.classList.add('dragging');

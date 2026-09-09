@@ -32,8 +32,33 @@ y abris http://localhost:5173
 Cada push a `main` republica el sitio. En GitHub: Settings -> Pages ->
 Source: "Deploy from a branch", Branch: `main`, carpeta `/ (root)`.
 
-El dominio sale del archivo `CNAME`. Del lado del DNS, para el apex hacen
-falta los registros A (y AAAA) que GitHub muestra en Settings -> Pages.
+El dominio sale del archivo `CNAME`. Cuando el chequeo de DNS de a ✓, activar
+"Enforce HTTPS" (el certificado tarda unos minutos en emitirse).
+
+### DNS del dominio (Hostinger)
+
+El dominio venia apuntado a Shopify; el 2026-09-09 se paso a GitHub Pages.
+
+```
+A      @      185.199.108.153        los cuatro, mismo nombre @
+A      @      185.199.109.153
+A      @      185.199.110.153
+A      @      185.199.111.153
+CNAME  www    Markitoo22.github.io
+```
+
+Opcional, para IPv6: cuatro AAAA en `@` a `2606:50c0:8000::153`,
+`8001::153`, `8002::153` y `8003::153`.
+
+Lo que quedo del setup viejo y NO hay que tocar:
+
+- `TXT @ facebook-domain-verification=...` — verificacion de dominio de Meta,
+  no tiene relacion con el hosting. Si se borra, se cae la verificacion del
+  pixel y del catalogo.
+- `CNAME cuenta -> shops.myshopify.com` — cuentas de cliente de Shopify. Solo
+  afecta a ese subdominio, se borra cuando se de de baja la tienda.
+
+Se elimino `A @ 23.227.38.65`, que era la IP de Shopify.
 
 ## Cambiar el color de todo el sitio
 

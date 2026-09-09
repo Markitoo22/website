@@ -7,7 +7,9 @@
   'use strict';
 
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var fine = window.matchMedia('(pointer: fine)').matches;
+  /* mouse de verdad: excluye tactil, hibridos y la vista mobile del devtools.
+     Sin mouse el fondo igual se mueve, pero no reacciona a nada. */
+  var mouse = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
   /* ---------- leer colores resueltos desde el CSS ----------
      Un elemento sonda devuelve el valor ya calculado en rgba(),
@@ -43,8 +45,8 @@
   var canvas = document.getElementById('plexus');
   var ctx = canvas.getContext('2d', { alpha: true });
   var W = 0, H = 0, nodes = [], raf = 0, last = 0;
-  var frameGap = fine ? 0 : 32;                       /* ~30fps en tactil */
-  var LINK = fine ? 138 : 112, LINK2 = LINK * LINK;
+  var frameGap = mouse ? 0 : 32;                       /* ~30fps en tactil */
+  var LINK = mouse ? 138 : 112, LINK2 = LINK * LINK;
   var PTR = 190, PTR2 = PTR * PTR;
   var ptr = { x: -9999, y: -9999, on: false };
   var seg = [[], [], []];
@@ -52,7 +54,7 @@
 
   function build() {
     var w = window.innerWidth, h = window.innerHeight;
-    var dpr = Math.min(window.devicePixelRatio || 1, fine ? 1.75 : 1.4);
+    var dpr = Math.min(window.devicePixelRatio || 1, mouse ? 1.75 : 1.4);
     W = w; H = h;
     canvas.width = Math.round(w * dpr);
     canvas.height = Math.round(h * dpr);
@@ -61,7 +63,7 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     var n = Math.round((w * h) / 17000);
-    n = Math.max(14, Math.min(fine ? 62 : 24, n));    /* menos nodos en celular */
+    n = Math.max(14, Math.min(mouse ? 62 : 24, n));    /* menos nodos en celular */
     nodes.length = 0;
     for (var i = 0; i < n; i++) {
       nodes.push({
@@ -163,7 +165,7 @@
   });
 
   /* ---------- brillo que sigue al cursor ---------- */
-  if (fine && !reduce) {
+  if (mouse && !reduce) {
     var glow = document.getElementById('glow');
     var gx = 0, gy = 0, queued = false;
     window.addEventListener('pointermove', function (e) {

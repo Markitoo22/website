@@ -5,7 +5,7 @@
 (function () {
   'use strict';
 
-  if (!window.matchMedia('(pointer: fine)').matches) return;
+  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
 
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var root = document.documentElement;

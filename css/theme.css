@@ -77,7 +77,7 @@
   /* --- tipografia y medidas (no dependen del color) --- */
   --display: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
   --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-  --pad: clamp(20px, 5vw, 56px);
+  --pad: clamp(28px, 5vw, 56px);   /* margen lateral: 28px en mobile, 56 en desktop */
   --maxw: 1120px;
   --ease: cubic-bezier(.2,.7,.2,1);
 }

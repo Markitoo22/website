@@ -40,12 +40,14 @@ html.dragging, html.dragging *{ cursor: grabbing !important; }
 
 /* ============ capas de ambiente ============ */
 #plexus{
-  /* el JS ya no le pone width/height inline: la caja sale de inset:0, que en
-     mobile es el viewport grande (con la barra de direcciones plegada), asi
-     el fondo cubre todo aunque la barra aparezca.
-     Sin translateZ a proposito: promover a capa una superficie del tamaño de
-     la pantalla es justo lo que hace fragil el compositor en Android. */
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  /* width/height 100% NO son redundantes con inset:0: <canvas> es un elemento
+     reemplazado y con width:auto el CSS le da su tamaño INTRINSECO (300x150)
+     ignorando el right/bottom. Sin esto el fondo se dibuja en un rectangulo
+     de 300x150 arriba a la izquierda.
+     Sin translateZ a proposito: promover una superficie del tamaño de la
+     pantalla es justo lo que hace fragil al compositor en Android. */
+  width: 100%; height: 100%;
 }
 .vignette{
   position: fixed; inset: 0; z-index: 0; pointer-events: none;

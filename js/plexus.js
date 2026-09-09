@@ -6,10 +6,18 @@
 (function () {
   'use strict';
 
-  /* ===== INTERRUPTOR DEL FONDO EN CELULARES =====
-     En false el canvas no se dibuja ni existe en pantallas tactiles.
-     Poner false y recargar es todo lo que hay que hacer para matarlo. */
-  var FONDO_EN_MOBILE = true;
+  /* ===== EL FONDO NO CORRE EN CELULARES =====
+     Se apago despues de tres intentos de arreglarlo. El sintoma final era
+     que al scrollear a fondo la pagina quedaba blanca: no era el fondo de
+     la pagina faltando, era EL CANVAS pintandose blanco. Esta en z-index 0,
+     encima del fondo y debajo del contenido, que es exactamente la capa que
+     se veia blanca mientras el header y las cajas seguian oscuros.
+     Al scrollear fuerte el compositor descarta y reconstruye superficies, el
+     canvas pierde su contexto GPU y en varios Android esa superficie perdida
+     se pinta blanca. No hay forma de evitarlo desde el lado del canvas.
+     En tactil queda el fondo con la viñeta, que es casi el mismo efecto.
+     En true vuelve a dibujarse (una sola vez, sin animar). */
+  var FONDO_EN_MOBILE = false;
 
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   /* mouse de verdad: excluye tactil, hibridos y la vista mobile del devtools. */
@@ -62,17 +70,6 @@
     clon.removeAttribute('id');
     clon.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
     icon.href = 'data:image/svg+xml,' + encodeURIComponent(new XMLSerializer().serializeToString(clon));
-  }
-
-  /* ---------- sello de version ----------
-     Sale del ?v= del link del CSS, asi hay un solo numero que mantener.
-     Sirve para saber de un vistazo, desde un celular y sin consola, si lo
-     que estas viendo es la version nueva o una copia guardada por el CDN. */
-  var sello = document.getElementById('build');
-  var hoja = document.querySelector('link[href*="styles.css"]');
-  if (sello && hoja) {
-    var v = /[?&]v=([\w.-]+)/.exec(hoja.getAttribute('href') || '');
-    if (v) sello.textContent = v[1];
   }
 
   /* ---------- canvas ---------- */

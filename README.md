@@ -1,7 +1,9 @@
-# ML PC Performance — landing
+# ML PC Performance
 
-Sitio estatico, sin build y sin dependencias. Se sube tal cual a cualquier
-hosting (Netlify, Vercel, un FTP, Shopify como pagina custom) y funciona.
+Landing del servicio de puesta a punto de PC. Sitio estatico, sin build y sin
+dependencias: se publica solo con GitHub Pages.
+
+**En vivo:** https://mlpcperformance.com
 
 ## Archivos
 
@@ -11,18 +13,27 @@ css/theme.css     EL COLOR: --brand y toda la paleta derivada de ahi
 css/styles.css    estilos (ningun color literal)
 js/plexus.js      fondo reactivo al mouse, entradas, conteo de numeros
 js/drag.js        arrastre de la pagina con el click, con inercia
+CNAME             el dominio propio que usa GitHub Pages
+.nojekyll         que Pages publique los archivos tal cual, sin procesarlos
 ```
 
 ## Ver en local
 
-Necesita servirse por HTTP (abrir el archivo con doble click funciona, pero
-`file://` no es representativo). Desde esta carpeta:
+Necesita servirse por HTTP (`file://` no es representativo). Desde la raiz:
 
 ```
 python -m http.server 5173
 ```
 
 y abris http://localhost:5173
+
+## Publicar
+
+Cada push a `main` republica el sitio. En GitHub: Settings -> Pages ->
+Source: "Deploy from a branch", Branch: `main`, carpeta `/ (root)`.
+
+El dominio sale del archivo `CNAME`. Del lado del DNS, para el apex hacen
+falta los registros A (y AAAA) que GitHub muestra en Settings -> Pages.
 
 ## Cambiar el color de todo el sitio
 
@@ -35,6 +46,8 @@ Una sola linea, en `css/theme.css`:
 De ese hex salen el tono y la saturacion de los ~34 colores restantes. Las
 claridades son fijas, asi el fondo sigue siendo casi negro y el texto legible
 con cualquier color. El canvas del fondo y el favicon tambien lo leen.
+
+Requiere color relativo de CSS: Chrome/Edge 119+, Safari 16.4+, Firefox 128+.
 
 ## Antes de mandarla a produccion
 

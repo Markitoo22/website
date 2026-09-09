@@ -1,20 +1,25 @@
 /* ==================================================================
-   Multiidioma.
+   Multiidioma, por PAIS DE CONEXION.
 
    Que idioma se muestra, en este orden:
-     1. ?lang=xx en la URL            (para compartir un link ya traducido)
-     2. la eleccion guardada          (si el visitante toco el selector)
-     3. LA ZONA HORARIA del equipo    (de donde se conecta)
-     4. el idioma del navegador       (si la zona no esta mapeada)
-     5. ingles
+     1. ?lang=xx en la URL          (para compartir un link ya traducido)
+     2. la eleccion guardada        (si el visitante toco el selector)
+     3. EL PAIS DE SU IP            (de donde se conecta de verdad)
+     4. la zona horaria del equipo  (pintado instantaneo y respaldo)
+     5. el idioma del navegador
+     6. ingles
 
-   La zona horaria va antes que el idioma del navegador a proposito: un
-   gamer argentino con Windows en ingles tiene que ver la pagina en
-   espanol. No usa geolocalizacion por IP porque eso obligaria a pedirle
-   permiso o a llamar a una API externa en cada visita.
+   Como el pais lo resuelve un servicio externo, la pagina no lo espera:
+   pinta al instante con la zona horaria y, cuando llega la respuesta de
+   la IP (~200 ms), reescribe los textos si dio otro idioma. El pais
+   queda cacheado 12 h, asi que a partir de la segunda visita el idioma
+   correcto sale de una, sin llamada.
 
-   Para AGREGAR un idioma: sumar su bloque a DICT, su codigo a LANGS y,
-   si hace falta, sus zonas a ZONES. Nada mas.
+   Si el servicio falla, tarda o lo bloquea un adblocker, no pasa nada:
+   se queda lo que decidio la zona horaria.
+
+   Para AGREGAR un idioma: sumar su bloque a DICT, su codigo a LANGS y
+   sus paises a COUNTRY (y sus zonas a ZONES, opcional).
    Para SACAR uno: borrarlo de LANGS.
    ================================================================== */
 (function () {
@@ -328,7 +333,29 @@
     it: ['Europe/Rome', 'Europe/Vatican', 'Europe/San_Marino', 'Europe/Malta']
   };
 
+  /* Pais de la IP -> idioma. Todo lo que no este listado cae en ingles. */
+  var COUNTRY = {
+    es: ['AR', 'MX', 'CO', 'CL', 'PE', 'VE', 'UY', 'PY', 'BO', 'EC', 'CU', 'DO',
+         'GT', 'HN', 'NI', 'CR', 'SV', 'PA', 'PR', 'ES', 'GQ'],
+    pt: ['BR', 'PT', 'AO', 'MZ', 'CV', 'GW', 'ST', 'TL'],
+    fr: ['FR', 'BE', 'LU', 'MC', 'SN', 'CI', 'CM', 'ML', 'BF', 'NE', 'TG', 'BJ',
+         'GA', 'CG', 'CD', 'MG', 'TN', 'MA', 'DZ', 'HT', 'GP', 'MQ', 'RE', 'NC', 'PF'],
+    de: ['DE', 'AT', 'CH', 'LI'],   /* CH: aleman es la mayoria */
+    it: ['IT', 'SM', 'VA']
+    /* BE va en frances: no hay holandes en la lista, y es el mas util de los dos.
+       CA no esta: fuera de Quebec se habla ingles, y aca solo hay pais. */
+  };
+
+  /* Dos proveedores sin API key, con CORS abierto. Si el primero no
+     contesta en 2,5 s se prueba el segundo. */
+  var GEO = [
+    { url: 'https://api.country.is/', pick: function (j) { return j.country; } },
+    { url: 'https://get.geojs.io/v1/ip/country.json', pick: function (j) { return j.country; } }
+  ];
+
   var STORE = 'mlpc.lang';
+  var GEO_STORE = 'mlpc.country';
+  var GEO_TTL = 12 * 60 * 60 * 1000;
 
   function supported(code) {
     if (!code) return null;
@@ -361,9 +388,44 @@
     try { return supported(localStorage.getItem(STORE)); } catch (e) { return null; }
   }
 
-  function detect() {
-    var q = /[?&]lang=([a-z-]{2,5})/i.exec(location.search);
-    return supported(q && q[1]) || stored() || fromZone() || fromBrowser() || FALLBACK;
+  /* --- pais de la IP --- */
+
+  function fromCountry(cc) {
+    if (!cc) return null;
+    cc = String(cc).toUpperCase();
+    for (var lang in COUNTRY) {
+      if (COUNTRY[lang].indexOf(cc) > -1) return lang;
+    }
+    return FALLBACK;                       /* pais conocido, idioma que no tenemos */
+  }
+
+  function countryCached() {
+    try {
+      var raw = JSON.parse(localStorage.getItem(GEO_STORE) || 'null');
+      if (raw && raw.c && Date.now() - raw.t < GEO_TTL) return raw.c;
+    } catch (e) {}
+    return null;
+  }
+
+  function countryFetch(done) {
+    if (!window.fetch) return done(null);
+    var i = 0;
+    (function next() {
+      if (i >= GEO.length) return done(null);
+      var p = GEO[i++];
+      var ctl = window.AbortController ? new AbortController() : null;
+      var timer = window.setTimeout(function () { if (ctl) ctl.abort(); }, 2500);
+      window.fetch(p.url, ctl ? { signal: ctl.signal } : undefined)
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) {
+          window.clearTimeout(timer);
+          var cc = j && p.pick(j);
+          if (!cc) return next();
+          try { localStorage.setItem(GEO_STORE, JSON.stringify({ c: cc, t: Date.now() })); } catch (e) {}
+          done(cc);
+        })
+        .catch(function () { window.clearTimeout(timer); next(); });
+    })();
   }
 
   function apply(lang) {
@@ -411,8 +473,25 @@
     if (sel) sel.value = lang;
   }
 
-  var current = detect();
+  /* --- arranque --- */
+
+  var q = /[?&]lang=([a-z-]{2,5})/i.exec(location.search);
+  var forced = supported(q && q[1]) || stored();   /* el visitante ya eligio: la IP no manda */
+  var cached = countryCached();
+
+  var current = forced || fromCountry(cached) || fromZone() || fromBrowser() || FALLBACK;
   apply(current);
+
+  /* primera visita: preguntamos el pais y reescribimos si hace falta */
+  if (!forced && !cached) {
+    countryFetch(function (cc) {
+      var byIp = fromCountry(cc);
+      if (byIp && byIp !== current) {
+        current = byIp;
+        apply(current);
+      }
+    });
+  }
 
   var select = document.getElementById('lang');
   if (select) {

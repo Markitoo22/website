@@ -8,11 +8,13 @@ dependencias: se publica solo con GitHub Pages.
 ## Archivos
 
 ```
-index.html        la pagina
+index.html        la pagina (solo markup)
 css/theme.css     EL COLOR: --brand y toda la paleta derivada de ahi
 css/styles.css    estilos (ningun color literal)
+js/i18n.js        TODA LA COPY, en 6 idiomas, y la deteccion por pais
 js/plexus.js      fondo reactivo al mouse, entradas, conteo de numeros
 js/drag.js        arrastre de la pagina con el click, con inercia
+test-i18n.js      test de la deteccion de idioma: node test-i18n.js
 CNAME             el dominio propio que usa GitHub Pages
 .nojekyll         que Pages publique los archivos tal cual, sin procesarlos
 ```
@@ -70,14 +72,24 @@ Que idioma se muestra, en este orden:
 
 1. `?lang=xx` en la URL — sirve para probar: `?lang=de`, `?lang=pt`
 2. lo que el visitante haya elegido en el selector (queda guardado)
-3. **la zona horaria del equipo** (de donde se conecta)
-4. el idioma del navegador
-5. ingles
+3. **el pais de su IP** — de donde se conecta de verdad
+4. la zona horaria del equipo
+5. el idioma del navegador
+6. ingles
 
-La zona horaria va antes que el idioma del navegador a proposito: un gamer
-argentino con Windows en ingles tiene que ver la pagina en español. No usa
-geolocalizacion por IP: eso obligaria a llamar a una API externa en cada
-visita, con su latencia y su punto de falla.
+El pais lo resuelve `api.country.is`, con `get.geojs.io` de respaldo: dos
+servicios sin API key y con CORS abierto. La pagina no espera la respuesta:
+pinta al instante con la zona horaria y reescribe los textos cuando llega el
+pais (~200 ms), solo si dio otro idioma. El pais queda cacheado 12 h, asi que
+desde la segunda visita sale de una y sin llamada. Si el servicio falla, tarda
+o lo bloquea un adblocker, queda lo que decidio la zona horaria.
+
+La contra a saber: la IP del visitante pasa por un tercero. Si algun dia hace
+falta evitarlo, se borra el bloque `GEO` y la deteccion sigue funcionando con
+la zona horaria.
+
+La logica tiene test: `node test-i18n.js` (en la raiz del repo) cubre
+los 10 casos (VPN, cache, API caida, fallbacks).
 
 **Idiomas que se pueden atender:** `SPOKEN` en `js/i18n.js`, hoy es y en. A
 quien llega en cualquier otro idioma se le avisa antes de que escriba ("las

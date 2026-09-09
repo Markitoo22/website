@@ -73,7 +73,6 @@
   --btn-shadow-hi: rgb(from var(--accent) r g b / .95);
   --bar-glow:      rgb(from var(--accent) r g b / .75);    /* glow de las barras */
   --pulse:         rgb(from var(--accent) r g b / .50);    /* punto del header */
-  --plexus-ptr:    rgb(from var(--accent) r g b / .30);    /* lineas al cursor */
   --plexus-near:   rgb(from var(--accent-lit) r g b / .34);
   --plexus-mid:    rgb(from var(--accent-lit) r g b / .17);
   --node-hot:      rgb(from var(--accent-mid) r g b / .85);

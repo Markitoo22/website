@@ -51,7 +51,7 @@
     return out;
   }
 
-  var C = palette(['plexus-near', 'plexus-mid', 'plexus-far', 'plexus-ptr', 'node', 'node-hot', 'brand', 'ink']);
+  var C = palette(['plexus-near', 'plexus-mid', 'plexus-far', 'node', 'node-hot', 'brand', 'ink']);
 
   /* ---------- favicon: el mismo escudo del header ----------
      Se clona el SVG inline y se le reemplazan los var(--...) por el color
@@ -79,8 +79,12 @@
   var frameGap = 0;
   /* mas alcance sin mouse: el dibujo es unico, las lineas no cuestan por frame */
   var LINK = mouse ? 138 : 132, LINK2 = LINK * LINK;
-  var PTR = 190, PTR2 = PTR * PTR;
-  var ptr = { x: -9999, y: -9999, on: false };
+  /* Campo del cursor. Mismo radio y misma fuerza en los dos modos: lo unico
+     que cambia es el signo, asi que alcanza con dos numeros. */
+  var FIELD = 330, FIELD2 = FIELD * FIELD;   /* radio de influencia, en px */
+  var FORCE = 118;      /* px que se desplaza el nodo justo bajo el cursor */
+  var EASE = 0.14;      /* que tan rapido acompaña el desplazamiento (0..1) */
+  var ptr = { x: -9999, y: -9999, on: false, down: false };
   var seg = [[], [], []];
   var STROKE = [C['plexus-near'], C['plexus-mid'], C['plexus-far']];
 
@@ -90,6 +94,8 @@
       y: Math.random() * h,
       vx: (Math.random() - 0.5) * 0.15,
       vy: (Math.random() - 0.5) * 0.15,
+      ox: 0, oy: 0,        /* desplazamiento por el cursor (solo para dibujar) */
+      px: 0, py: 0,        /* posicion pintada = base + desplazamiento */
       s: Math.random() < 0.22 ? 2.4 : 1.4
     };
   }
@@ -109,6 +115,8 @@
       for (var k = 0; k < nodes.length; k++) {
         nodes[k].x *= sx;
         nodes[k].y *= sy;
+        nodes[k].px = nodes[k].x;
+        nodes[k].py = nodes[k].y;
       }
     }
 
@@ -129,29 +137,55 @@
     ctx.clearRect(0, 0, W, H);
     seg[0].length = seg[1].length = seg[2].length = 0;
 
+    var ox, oy, d, f;
     for (i = 0; i < nodes.length; i++) {
       a = nodes[i];
       a.x += a.vx; a.y += a.vy;
       if (a.x < -20) a.x = W + 20; else if (a.x > W + 20) a.x = -20;
       if (a.y < -20) a.y = H + 20; else if (a.y > H + 20) a.y = -20;
 
-      if (ptr.on) {                                    /* imantado suave al cursor */
-        dx = ptr.x - a.x; dy = ptr.y - a.y; d2 = dx * dx + dy * dy;
-        if (d2 < PTR2 && d2 > 4) {
-          k = (1 - d2 / PTR2) * 0.04;
-          a.x += dx * k; a.y += dy * k;
+      /* CAMPO DEL CURSOR: repele, y ATRAE con el boton apretado. Simetrico:
+         mismo radio y misma fuerza, cambia el signo.
+         El desplazamiento no toca la posicion real del nodo: es con lo que se
+         lo DIBUJA. Si se acumulara sobre la posicion, cada pasada del mouse
+         barreria los nodos hacia los bordes y no volverian nunca (derivan a
+         0,15 px por frame). Asi el campo se deforma al pasar y se cierra solo
+         al alejarse.
+         La fuerza decae al cuadrado y vale exactamente 0 en el borde: no hay
+         ningun punto donde se active de golpe. */
+      ox = 0; oy = 0;
+      if (ptr.on) {
+        dx = a.x - ptr.x; dy = a.y - ptr.y;      /* del cursor HACIA el nodo */
+        d2 = dx * dx + dy * dy;
+        if (d2 < FIELD2) {
+          d = Math.sqrt(d2) || 0.001;
+          f = 1 - d / FIELD;
+          f = f * f * FORCE;                     /* decae al cuadrado, 0 en el borde */
+          /* A proposito SIN limitar el tiron a la distancia: atrayendo, los
+             nodos mas cercanos cruzan el cursor y salen del otro lado, y el
+             campo se da vuelta sobre si mismo. Es acotado (FORCE px como
+             maximo), no se descontrola. Para que se junten sin pasarse:
+             if (ptr.down) f = Math.min(f, d * 0.82); */
+          k = ptr.down ? -1 : 1;                 /* -1 atrae, 1 repele */
+          ox = (dx / d) * f * k;
+          oy = (dy / d) * f * k;
         }
       }
+      /* se acompaña en vez de saltar: con el mouse rapido no da tirones */
+      a.ox += (ox - a.ox) * EASE;
+      a.oy += (oy - a.oy) * EASE;
+      a.px = a.x + a.ox;
+      a.py = a.y + a.oy;
     }
 
     for (i = 0; i < nodes.length; i++) {
       a = nodes[i];
       for (j = i + 1; j < nodes.length; j++) {
         b = nodes[j];
-        dx = a.x - b.x; dy = a.y - b.y; d2 = dx * dx + dy * dy;
+        dx = a.px - b.px; dy = a.py - b.py; d2 = dx * dx + dy * dy;
         if (d2 < LINK2) {
           t = 1 - d2 / LINK2;
-          seg[t > 0.62 ? 0 : t > 0.3 ? 1 : 2].push(a.x, a.y, b.x, b.y);
+          seg[t > 0.62 ? 0 : t > 0.3 ? 1 : 2].push(a.px, a.py, b.px, b.py);
         }
       }
     }
@@ -169,22 +203,15 @@
       ctx.stroke();
     }
 
-    if (ptr.on) {
-      ctx.beginPath();
-      for (i = 0; i < nodes.length; i++) {
-        a = nodes[i];
-        dx = ptr.x - a.x; dy = ptr.y - a.y;
-        if (dx * dx + dy * dy < PTR2) { ctx.moveTo(ptr.x, ptr.y); ctx.lineTo(a.x, a.y); }
-      }
-      ctx.strokeStyle = C['plexus-ptr'];
-      ctx.lineWidth = 0.8;
-      ctx.stroke();
-    }
+    /* Sin rayos desde el cursor: eran el dibujo de la atraccion (una
+       constelacion juntandose en tu puntero). Con repulsion se contradicen,
+       porque los nodos se van y las lineas los persiguen. El efecto ahora es
+       la malla abriendose, y eso se lee mejor solo. */
 
     for (i = 0; i < nodes.length; i++) {
       a = nodes[i];
       ctx.fillStyle = a.s > 2 ? C['node-hot'] : C['node'];
-      ctx.fillRect(a.x - a.s / 2, a.y - a.s / 2, a.s, a.s);
+      ctx.fillRect(a.px - a.s / 2, a.py - a.s / 2, a.s, a.s);
     }
   }
 
@@ -243,8 +270,19 @@
     }, { passive: true });
     window.addEventListener('pointerleave', function () {
       ptr.on = false;
+      ptr.down = false;
       glow.style.opacity = '0';
     });
+
+    /* boton apretado = atraccion. Conviven con el arrastre de la pagina:
+       agarras, la moves, y mientras el campo se junta hacia el cursor. */
+    window.addEventListener('pointerdown', function (e) {
+      if (e.pointerType === 'mouse' && e.button === 0) ptr.down = true;
+    });
+    var soltar = function () { ptr.down = false; };
+    window.addEventListener('pointerup', soltar);
+    window.addEventListener('pointercancel', soltar);
+    window.addEventListener('blur', soltar);
   }
 
   /* ---------- hairline del header ---------- */

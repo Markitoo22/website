@@ -1,0 +1,81 @@
+/* ==================================================================
+   TEMA — aca hay UN color declarado. Todo lo demas se calcula.
+
+   Cambias --brand y la pagina entera se recalcula sola: cada color
+   toma el TONO y la SATURACION de --brand, y aporta lo suyo con tres
+   numeros:
+
+     calc(h - N)      cuanto se corre el tono respecto del brand.
+                      Es lo que hace que los neutros esten sesgados
+                      hacia el color: con rojo dan grises calidos,
+                      con azul darian grises frios, solos.
+
+     calc(s * K)      que fraccion de la saturacion del brand usa.
+                      1 = puro (acentos), .07 = casi gris (textos).
+                      Si elegis un brand apagado, todo se apaga junto.
+
+     N%               la claridad, y es FIJA a proposito: el fondo
+                      tiene que seguir siendo casi negro y el texto
+                      legible, sea cual sea el color elegido.
+
+   Requiere color relativo de CSS (Chrome/Edge 119+, Safari 16.4+,
+   Firefox 128+, todo 2024 en adelante).
+   ================================================================== */
+
+:root{
+  /* ============================================================
+     =============   EL UNICO COLOR DECLARADO   =================
+     ============================================================ */
+  --brand: #FF2E2E;
+
+
+  /* --- acentos: mismo tono y saturacion, distinta claridad --- */
+  --accent:        var(--brand);
+  --accent-hi:     hsl(from var(--brand) h s 61.5686%);              /* alto del boton */
+  --accent-lit:    hsl(from var(--brand) h s 64.5098%);              /* lineas del plexus */
+  --accent-mid:    hsl(from var(--brand) h s 62.5490%);              /* nodos del plexus */
+  --accent-deep:   hsl(from var(--brand) calc(h - 5.028) s 35.0980%); /* fondo del boton, glow */
+
+  /* --- fondos: el tono del brand, casi sin saturacion --- */
+  --ink:           hsl(from var(--brand) calc(h - 20)    calc(s * .17647)  3.3333%);
+  --ink-2:         hsl(from var(--brand) calc(h - 30)    calc(s * .16667)  4.7059%);
+  --panel:         hsl(from var(--brand) calc(h - 20)    calc(s * .20000)  5.8824%);
+
+  /* --- textos y grises --- */
+  --fg:            hsl(from var(--brand) h               calc(s * .18750) 93.7255%);
+  --fg-2:          hsl(from var(--brand) calc(h - 6)     calc(s * .09434) 79.2157%);
+  --muted:         hsl(from var(--brand) calc(h - 8)     calc(s * .06912) 57.4510%);
+  --graphite:      hsl(from var(--brand) calc(h - 22.5)  calc(s * .06897) 22.7451%);
+
+  /* --- transparencias: los mismos colores, con alfa --- */
+  --line:          rgb(from var(--fg) r g b / .10);        /* bordes */
+  --line-soft:     rgb(from var(--fg) r g b / .055);       /* hairlines entre secciones */
+  --scan:          rgb(from var(--fg) r g b / .022);       /* scanlines del fondo */
+  --gloss:         rgb(from var(--fg) r g b / .22);        /* brillo interno del boton */
+  --gloss-hi:      rgb(from var(--fg) r g b / .28);
+  --plexus-far:    rgb(from var(--fg) r g b / .07);        /* lineas lejanas del plexus */
+  --node:          rgb(from var(--fg) r g b / .38);        /* nodos comunes */
+  --veil-top:      rgb(from var(--ink) r g b / .94);       /* velo del header */
+  --veil-mid:      rgb(from var(--ink) r g b / .60);
+  --veil-stuck:    rgb(from var(--ink) r g b / .88);
+  --veil-deep:     rgb(from var(--ink) r g b / .92);       /* vinieta de abajo */
+  --glow-in:       rgb(from var(--accent) r g b / .11);    /* halo del cursor */
+  --glow-out:      rgb(from var(--accent) r g b / .03);
+  --btn-shadow:    rgb(from var(--accent) r g b / .85);
+  --btn-shadow-hi: rgb(from var(--accent) r g b / .95);
+  --bar-glow:      rgb(from var(--accent) r g b / .75);    /* glow de las barras */
+  --pulse:         rgb(from var(--accent) r g b / .50);    /* punto del header */
+  --plexus-ptr:    rgb(from var(--accent) r g b / .30);    /* lineas al cursor */
+  --plexus-near:   rgb(from var(--accent-lit) r g b / .34);
+  --plexus-mid:    rgb(from var(--accent-lit) r g b / .17);
+  --node-hot:      rgb(from var(--accent-mid) r g b / .85);
+  --vignette:      rgb(from var(--accent-deep) r g b / .22);
+
+
+  /* --- tipografia y medidas (no dependen del color) --- */
+  --display: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --pad: clamp(20px, 5vw, 56px);
+  --maxw: 1120px;
+  --ease: cubic-bezier(.2,.7,.2,1);
+}

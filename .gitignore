@@ -1,0 +1,8 @@
+# proyecto anterior, no se versiona
+OLD/
+
+# sistema / editor
+Thumbs.db
+Desktop.ini
+.DS_Store
+__pycache__/

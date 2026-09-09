@@ -60,28 +60,43 @@
   var seg = [[], [], []];
   var STROKE = [C['plexus-near'], C['plexus-mid'], C['plexus-far']];
 
+  function nodo(w, h) {
+    return {
+      x: Math.random() * w,
+      y: Math.random() * h,
+      vx: (Math.random() - 0.5) * 0.15,
+      vy: (Math.random() - 0.5) * 0.15,
+      s: Math.random() < 0.22 ? 2.4 : 1.4
+    };
+  }
+
+  /* El tamaño sale de la caja del propio canvas, no de window.innerHeight:
+     en mobile ese valor es el del viewport visible y no coincide con el alto
+     del elemento fijo, asi que el dibujo no llegaba al final de la pantalla. */
   function build() {
-    var w = window.innerWidth, h = window.innerHeight;
+    var caja = canvas.getBoundingClientRect();
+    var w = Math.max(1, Math.round(caja.width));
+    var h = Math.max(1, Math.round(caja.height));
     var dpr = Math.min(window.devicePixelRatio || 1, mouse ? 1.75 : 1.4);
+
+    /* los nodos se reescalan, no se rehacen: rearmarlos hace saltar el fondo */
+    if (nodes.length && W && H) {
+      var sx = w / W, sy = h / H;
+      for (var k = 0; k < nodes.length; k++) {
+        nodes[k].x *= sx;
+        nodes[k].y *= sy;
+      }
+    }
+
     W = w; H = h;
     canvas.width = Math.round(w * dpr);
     canvas.height = Math.round(h * dpr);
-    canvas.style.width = w + 'px';
-    canvas.style.height = h + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     var n = Math.round((w * h) / 17000);
     n = Math.max(14, Math.min(mouse ? 62 : 24, n));    /* menos nodos en celular */
-    nodes.length = 0;
-    for (var i = 0; i < n; i++) {
-      nodes.push({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        vx: (Math.random() - 0.5) * 0.15,
-        vy: (Math.random() - 0.5) * 0.15,
-        s: Math.random() < 0.22 ? 2.4 : 1.4
-      });
-    }
+    while (nodes.length > n) nodes.pop();              /* se ajusta la cantidad */
+    while (nodes.length < n) nodes.push(nodo(w, h));   /* sin tocar los que hay */
   }
 
   function draw() {
@@ -164,6 +179,13 @@
 
   var rt;
   window.addEventListener('resize', function () {
+    /* En mobile la barra de direcciones aparece y desaparece al scrollear y
+       dispara resize con solo un cambio de alto. Si rearmamos ahi, el fondo
+       se mueve solo mientras el visitante scrollea. Reaccionamos al ancho
+       (rotacion) y a cambios de alto grandes, no a los de la barra. */
+    var caja = canvas.getBoundingClientRect();
+    if (Math.abs(Math.round(caja.width) - W) < 2 &&
+        Math.abs(Math.round(caja.height) - H) < 150) return;
     window.clearTimeout(rt);
     rt = window.setTimeout(function () { build(); draw(); }, 180);
   }, { passive: true });

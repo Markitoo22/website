@@ -31,7 +31,15 @@ a, .btn, .link, .top__cta{ cursor: pointer; }
 html.dragging, html.dragging *{ cursor: grabbing !important; }
 
 /* ============ capas de ambiente ============ */
-#plexus{ position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+#plexus{
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  /* el JS ya no le pone width/height inline: la caja sale de inset:0, que en
+     mobile es el viewport grande (con la barra de direcciones plegada), asi
+     el fondo cubre todo aunque la barra aparezca.
+     translateZ lo manda a su propia capa: un fixed sin promover parpadea al
+     scrollear en iOS. */
+  transform: translateZ(0);
+}
 .vignette{
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background:

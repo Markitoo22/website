@@ -9,7 +9,8 @@ dependencias: se publica solo con GitHub Pages.
 
 ```
 index.html        la pagina (solo markup)
-css/theme.css     EL COLOR: --brand y toda la paleta derivada de ahi
+config_editor.js  EL UNICO ARCHIVO EDITABLE: precios, telefono, color y frase
+css/theme.css     la paleta: toda derivada del --brand que pone el config
 css/styles.css    estilos (ningun color literal)
 js/i18n.js        TODA LA COPY, en 6 idiomas, y la deteccion por pais
 js/plexus.js      fondo reactivo al mouse, entradas, conteo de numeros
@@ -230,61 +231,139 @@ El dominio ya esta verificado en Meta desde la epoca de Shopify (el
 `TXT facebook-domain-verification` del DNS), siempre que sea el mismo Business
 Manager.
 
-## Los valores que se editan sin tocar codigo
+## config_editor.js — el unico archivo editable
 
-Cuatro cosas cambian seguido, asi que cada una vive en UN solo lugar y
-existe una herramienta para que el dueño las cambie solo (ver `EDIT/`).
+Cuatro cosas cambian con el tiempo: los dos precios, el telefono, el color
+y la frase. Viven todas en `config_editor.js`, en la raiz, y **no estan
+escritas en ningun otro lado del sitio**.
 
-| Que | Donde vive | Respaldo en index.html |
-|-----|-----------|------------------------|
-| color de todo el sitio | `css/theme.css` → `--brand` | — |
-| los dos precios | `js/i18n.js` → `PRECIOS` | el `data-count` de `#price` |
-| el numero de WhatsApp | `js/i18n.js` → `TELEFONO` | los 4 `href` + `[data-wa-texto]` |
-| la frase del subtitulo | `js/i18n.js` → la clave `frase` de cada idioma | `[data-i18n="frase"]` |
+```js
+window.MLPC = {
+  "precioAR": "89999",
+  "precioUSD": "89.99",
+  "telefono": "1155870867",
+  "color": "#00d19d",
+  "frase": { "es": "...", "en": "...", "pt": "...", "fr": "...", "de": "...", "it": "..." }
+};
+```
 
-**El respaldo de index.html no es duplicacion**: es lo que se ve si el
-JS no carga, igual que el español escrito en el resto del markup. La
-fuente manda y lo sobreescribe al arrancar; la herramienta mantiene los
-dos al dia en el mismo commit.
+Quien lo consume:
 
-El subtitulo esta partido en dos claves a proposito: `frase` (lo que el
-dueño escribe, se traduce a los 6 idiomas) y `sub_exp` (el "mas de 15
-años de experiencia", que no se toca).
+| Valor | Quien lo usa |
+|-------|--------------|
+| `precioAR` / `precioUSD` | `PRECIOS` en `js/i18n.js`, segun el pais de la IP |
+| `telefono` | los cuatro `[data-wa]` y el `[data-wa-texto]` del pie |
+| `color` | `--brand`, que lo pone el propio archivo (ver abajo) |
+| `frase` | el `[data-frase]` de abajo de las cajas, en el idioma detectado |
 
-El telefono son 10 digitos, `11` + 8, y de ahi salen las dos formas que
-necesita el sitio: el link `https://wa.me/549<10 digitos>` y el texto
-`11 5587-0867` del pie. Si algun dia cambia el area, hay que tocar la
-constante a mano: la herramienta deja el `11` fijo para que no se
-confunda con los 8 digitos.
+### Por que es .js y no .json
+
+Un `.json` habria que traerlo con `fetch`, que contesta **despues** del
+primer pintado. El color de marca se veria cambiar en la cara, porque el
+fondo se ve durante el arranque a proposito. Un `<script>` comun en el
+`<head>` corre antes de pintar.
+
+El archivo pone el color el mismo, con un estilo en linea sobre `<html>`,
+que le gana al `:root` de `css/theme.css`. El valor que quedo en
+`theme.css` es el **color de emergencia**: solo se ve si este archivo no
+carga o queda mal escrito, y por eso no hace falta mantenerlo al dia.
+
+`js/i18n.js` tiene su propio bloque `EMERGENCIA` con la misma idea: si
+`window.MLPC` no existe, el sitio no aparece vacio. No es una fuente de
+verdad, es una red.
+
+### Lo que se perdio a cambio
+
+Sin JavaScript el sitio ya se veia a medias (el idioma, la moneda y la
+compuerta de arranque son todos JS). Ahora, ademas, **los botones de
+WhatsApp no tienen `href` hasta que corre el JS** y el precio muestra un
+guion. Se acepto a proposito: la alternativa era mantener copias de cada
+valor en el HTML, que es justo la fragilidad que este archivo elimina. Un
+`href` viejo apuntando a otro numero es peor que un boton inerte.
+
+Los buscadores ejecutan JS, y las previsualizaciones de link usan el
+`<title>` y el `<meta description>`, que siguen escritos en el HTML.
 
 ## EDIT/ — la herramienta del dueño
 
 Un `.exe` de Go (7 MB, sin dependencias) que abre una pagina local en el
 navegador y publica por la API de GitHub, **sin git instalado**. Esta en
-`.gitignore` porque no es parte del sitio y su configuracion guarda una
-llave de GitHub.
+`.gitignore` porque no es parte del sitio.
 
-- Lee los valores del repo en vivo al abrir: lo que muestra es siempre
-  lo que esta publicado.
+Lo importante del diseño: **escribe `config_editor.js` completo, generado
+desde los valores.** No parsea HTML ni CSS, asi que el markup del sitio
+puede cambiar todo lo que quiera sin romper la herramienta. Lo unico que
+toca de `index.html` es el `?v=`, que es un patron estable y ademas se
+verifica antes de reemplazar: si no engancha, el publicado se aborta con
+un mensaje que dice que falto y en que archivo, en vez de subir a medias.
+
+- Lee los valores del repo en vivo al abrir: lo que muestra es siempre lo
+  que esta publicado.
 - La frase se traduce con Google Translate (el endpoint sin clave que usa
   la extension de Chrome, con un segundo de respaldo) y las traducciones
   se muestran editables **antes** de publicar.
-- Publica un solo commit con blob → tree → commit → ref: o entra todo o
-  no entra nada. Relee los archivos justo antes de escribir, asi no pisa
-  un cambio hecho desde otro lado.
-- Sube el `?v=` de `index.html` solo, con la fecha del dia y una letra.
+- Publica un solo commit con blob -> tree -> commit -> ref: o entra todo o
+  no entra nada. Relee el archivo justo antes de escribir, asi no pisa un
+  cambio hecho desde otro lado.
 - Cada campo tiene un boton que lo devuelve a su valor **original** (la
   variable `iniciales` de `EDIT/main.go`, horneada en el binario): los
   valores con los que salio el sitio no se pierden por mas veces que se
   publique encima. Es distinto de "Volver a lo publicado", que vuelve a
   lo que esta online. Para mover esa linea de base hay que editar
   `iniciales` y recompilar.
-- `cd EDIT && go test ./...` prueba los patrones contra los archivos
-  reales del repo: que `--brand` no agarre la declaracion comentada, que
-  las seis frases no se crucen entre bloques de idioma, que los 4 links
-  de WhatsApp se reemplacen, y que los precios vayan y vuelvan.
+- **Se apaga solo cuando se cierra el navegador.** La pagina manda un
+  latido a `/api/latido` cada 15 s y el programa se cierra si pasan 120
+  sin ninguno. Sin eso quedaria un proceso huerfano invisible, porque se
+  compila con `-H windowsgui` y no tiene consola ni ventana. El margen de
+  120 s es a proposito: los navegadores frenan los temporizadores de las
+  pestañas en segundo plano hasta uno por minuto, y una recarga tambien
+  deja un hueco. Para probarlo rapido: `MLPC_EDITOR_LATIDO=6`.
+- La llave de GitHub se guarda en la carpeta de configuracion del usuario
+  (`%APPDATA%`), **no** al lado del exe: mover el programa no la pierde, y
+  GitHub muestra el token una sola vez. Si existe un `editor-config.json`
+  al lado del exe, ese gana (modo pendrive). En los dos casos queda fuera
+  del repo.
+- `cd EDIT && go test ./...` prueba contra los archivos reales del repo:
+  que `config_editor.js` se lea, que lo generado vuelva a leerse igual
+  (ida y vuelta), que un archivo roto avise con claridad, que ningun valor
+  invalido llegue a publicarse, y que el `?v=` de `index.html` siga
+  estando.
+
+Para revisar la interfaz sin que se abra el navegador:
+
+```
+MLPC_EDITOR_PUERTO=8123 MLPC_EDITOR_SIN_NAVEGADOR=1 ./Editor.exe
+```
 
 Las instrucciones para el dueño estan en `EDIT/LEEME.txt`.
+
+## El destello de la frase
+
+La frase de abajo de las cajas tiene un reflejo que la cruza cada 7
+segundos. Dos decisiones que no se ven pero sostienen el efecto:
+
+**No es una capa de luz por encima.** Las dos lineas y el texto se
+**pintan** con el degradado del destello, asi solo se ve donde hay tinta
+y nada sobre el fondo. En el texto eso se consigue con `background-clip:
+text`, detras de un `@supports` porque necesita `color: transparent`: sin
+el recorte por texto la frase quedaria invisible.
+
+**`background-attachment: fixed` es lo que lo hace UN reflejo que viaja.**
+Pone el degradado en coordenadas del viewport, asi que las tres piezas
+muestran su tajada del mismo dibujo. Con backgrounds normales, cada una
+se mediria contra su propia caja y los tres destellos prenderian a la
+vez, sin recorrido. La posicion se anima una sola vez, en `.claim`, sobre
+una propiedad `@property` heredada: las tres van sincronizadas por
+construccion.
+
+El recorrido va de `-45vw` a `130vw` (la banda mide `34vw`), asi arranca y
+termina fuera de la pantalla, y el `linear` es a proposito: con easing se
+percibe un frenado justo antes de desaparecer. El resto del ciclo espera
+con el destello fuera de cuadro.
+
+El color sale de `--claim-shine`, que es casi blanco y no del tono de la
+marca: el destello va ENCIMA del color de marca, asi que con el mismo
+tono no aclararia nada.
 
 ## Logo
 
@@ -307,11 +386,14 @@ mascaras: 99,3 % la silueta del escudo, 97,4 % las letras.
 
 ## Cambiar el color de todo el sitio
 
-Una sola linea, en `css/theme.css`:
+Desde la herramienta de `EDIT/`, o a mano en `config_editor.js`:
 
-```css
---brand: #FF2E2E;
+```js
+"color": "#FF2E2E"
 ```
+
+El `--brand` de `css/theme.css` es el color de emergencia, el que se ve
+si `config_editor.js` no carga.
 
 De ese hex salen el tono y la saturacion de los ~34 colores restantes. Las
 claridades son fijas, asi el fondo sigue siendo casi negro y el texto legible
@@ -330,12 +412,11 @@ en persona (desarmar, pasta termica, retiro y entrega a domicilio).
 
 ## WhatsApp
 
-El numero esta en `TELEFONO`, en `js/i18n.js`, y de ahi salen los cuatro
-botones y el texto del pie. Formato del link: `54` + `9` (movil) + `11`
+El numero esta en `config_editor.js` y de ahi salen los cuatro botones y
+el texto del pie. Formato del link: `54` + `9` (movil) + `11`
 (area, sin el 0) + numero (sin el 15).
 
 Para cambiarlo no hace falta tocar codigo: esta en la herramienta de
-`EDIT/`. A mano, es esa unica constante (los `href` de `index.html` son
-el respaldo sin JS y conviene dejarlos iguales).
+`EDIT/`. A mano, es ese unico valor; los `href` los arma `js/i18n.js`.
 
 El mensaje que se autocompleta es la clave `wa` de cada idioma.

@@ -72,6 +72,8 @@
   --btn-shadow:    rgb(from var(--accent) r g b / .85);
   --btn-shadow-hi: rgb(from var(--accent) r g b / .95);
   --bar-glow:      rgb(from var(--accent) r g b / .75);    /* glow de las barras */
+  --claim-line:    rgb(from var(--accent) r g b / .55);    /* lineas de la frase */
+  --claim-shine:   rgb(from var(--fg) r g b / .88);       /* destello de la frase */
   --pulse:         rgb(from var(--accent) r g b / .50);    /* punto del header */
   --plexus-near:   rgb(from var(--accent-lit) r g b / .34);
   --plexus-mid:    rgb(from var(--accent-lit) r g b / .17);

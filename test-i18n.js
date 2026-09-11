@@ -6,6 +6,33 @@ const fs = require('fs');
 const path = require('path');
 const code = fs.readFileSync(path.join(__dirname, 'js', 'i18n.js'), 'utf8');
 
+/* Los valores de emergencia, sacados del propio js/i18n.js: son los que
+   tienen que aparecer si config_editor.js no cargo. */
+const EMERGENCIA = (() => {
+  const desde = code.indexOf('{', code.indexOf('var EMERGENCIA'));
+  const hasta = code.indexOf('}', desde);
+  if (desde < 0 || hasta < 0) throw new Error('js/i18n.js: no encuentro EMERGENCIA');
+  const salida = {};
+  for (const m of code.slice(desde, hasta).matchAll(/(\w+)\s*:\s*'([^']*)'/g)) {
+    salida[m[1]] = m[2];
+  }
+  return salida;
+})();
+
+/* El unico archivo editable. Se lee el de verdad, asi el test falla si
+   alguien lo deja mal escrito o le saca un idioma. */
+const CONFIG = (() => {
+  const crudo = fs.readFileSync(path.join(__dirname, 'config_editor.js'), 'utf8');
+  /* sin regex a proposito: se busca el objeto por sus llaves, asi no
+     importa como quede indentado el archivo */
+  const desde = crudo.indexOf('{', crudo.indexOf('window.MLPC'));
+  const hasta = crudo.lastIndexOf('}', crudo.indexOf(';', desde));
+  if (desde < 0 || hasta < desde) {
+    throw new Error('config_editor.js: no encuentro el objeto window.MLPC');
+  }
+  return JSON.parse(crudo.slice(desde, hasta + 1));
+})();
+
 function elemento() {
   const attrs = {};
   return {
@@ -16,17 +43,20 @@ function elemento() {
   };
 }
 
-function run({ ip, tz, nav, search = '', failGeo = false }) {
+function run({ ip, tz, nav, search = '', failGeo = false, sinConfig = false }) {
   return new Promise((resolve) => {
     const clases = new Set(['booting']);   /* la pone index.html; el JS la tiene que sacar */
     const html = { lang: '', classList: { add: (c) => clases.add(c), remove: (c) => clases.delete(c) } };
     const writes = [];
     const dom = { price: elemento(), currency: elemento() };
+    const nodoFrase = elemento();
 
     const ctx = {
       document: {
         documentElement: html,
-        querySelectorAll: () => [],
+        /* solo devuelve el nodo de la frase: es lo unico que este test
+           mira del DOM, aparte del precio */
+        querySelectorAll: (sel) => (sel === '[data-frase]' ? [nodoFrase] : []),
         getElementById: (id) => dom[id] || null,
         addEventListener: () => {},
         dispatchEvent: () => {},
@@ -54,6 +84,9 @@ function run({ ip, tz, nav, search = '', failGeo = false }) {
       Date, JSON, parseFloat, encodeURIComponent
     };
     ctx.window = ctx;
+    /* sinConfig simula que config_editor.js no cargo o quedo mal escrito:
+       ahi tienen que entrar los valores de emergencia */
+    if (!sinConfig) ctx.MLPC = JSON.parse(JSON.stringify(CONFIG));
 
     new Function(...Object.keys(ctx), code)(...Object.values(ctx));
     setTimeout(() => resolve({
@@ -61,6 +94,7 @@ function run({ ip, tz, nav, search = '', failGeo = false }) {
       booting: clases.has('booting'),
       moneda: dom.currency.textContent.trim(),
       monto: dom.price.getAttribute('data-count'),
+      frase: nodoFrase.textContent,
       writes
     }), 30);
   });
@@ -80,10 +114,16 @@ const casos = [
   ['API caida en AR -> zona horaria',     { ip: 'AR', tz: 'America/Argentina/Mendoza', nav: ['es'], failGeo: true },  'es', 'ARS'],
   ['API caida afuera -> zona horaria',    { ip: 'DE', tz: 'Europe/Rome', nav: ['en'], failGeo: true },                'it', 'USD'],
   ['API caida y zona rara -> nav',        { ip: 'DE', tz: 'Antarctica/Troll', nav: ['de-DE'], failGeo: true },        'de', 'USD'],
-  ['nada reconocible -> ingles',          { ip: 'JP', tz: 'Antarctica/Troll', nav: ['ja'], failGeo: true },           'en', 'USD']
+  ['nada reconocible -> ingles',          { ip: 'JP', tz: 'Antarctica/Troll', nav: ['ja'], failGeo: true },           'en', 'USD'],
+  /* la frase por idioma, que es lo que agrego el archivo editable */
+  ['frase en aleman desde el config',    { ip: 'DE', tz: 'Europe/Berlin', nav: ['de'] },                            'de', 'USD'],
+  ['frase en portugues desde el config', { ip: 'PT', tz: 'Europe/Lisbon', nav: ['pt-PT'] },                         'pt', 'USD'],
+  /* sin el archivo editable: entran los valores de emergencia */
+  ['sin config_editor.js -> emergencia', { ip: 'AR', tz: 'America/Argentina/Buenos_Aires', nav: ['es-AR'], sinConfig: true }, 'es', 'ARS']
 ];
 
-const MONTOS = { ARS: '89999', USD: '89.99' };
+const MONTOS = { ARS: CONFIG.precioAR, USD: CONFIG.precioUSD };
+const MONTOS_EMERGENCIA = { ARS: EMERGENCIA.precioAR, USD: EMERGENCIA.precioUSD };
 
 /* Paridad de claves: si a un idioma le falta una, ese texto queda en blanco.
    Tambien avisa si el HTML pide una clave que no existe en el diccionario. */
@@ -125,17 +165,24 @@ function paridad() {
   let ok = 0;
   for (const [nombre, cfg, idioma, moneda] of casos) {
     const r = await run(cfg);
+    /* sin el archivo editable, lo que tiene que aparecer son los valores
+       de emergencia; con el, los del archivo */
+    const montos = cfg.sinConfig ? MONTOS_EMERGENCIA : MONTOS;
+    /* la frase tiene que salir en el idioma que se detecto */
+    const frase = cfg.sinConfig ? EMERGENCIA.frase : CONFIG.frase[idioma];
     const bien = r.lang === idioma && r.moneda === moneda &&
-                 r.monto === MONTOS[moneda] && r.writes.length === 0 &&
+                 r.monto === montos[moneda] && r.writes.length === 0 &&
+                 r.frase === frase &&
                  r.booting === false;      /* la compuerta SIEMPRE se levanta */
     if (bien) ok++;
-    let detalle = `${r.lang} · ${r.monto} ${r.moneda}`;
+    let detalle = `${r.lang} · ${r.monto} ${r.moneda} · "${r.frase}"`;
     if (r.lang !== idioma) detalle += `  (idioma esperado ${idioma})`;
     if (r.moneda !== moneda) detalle += `  (moneda esperada ${moneda})`;
-    if (r.monto !== MONTOS[moneda]) detalle += `  (monto esperado ${MONTOS[moneda]})`;
+    if (r.monto !== montos[moneda]) detalle += `  (monto esperado ${montos[moneda]})`;
+    if (r.frase !== frase) detalle += `  (frase esperada "${frase}")`;
     if (r.writes.length) detalle += `  GUARDO: ${r.writes.join(', ')}`;
     if (r.booting) detalle += '  QUEDO OCULTA (compuerta trabada)';
-    console.log(`${bien ? 'OK  ' : 'FALLA'} ${nombre.padEnd(36)} -> ${detalle}`);
+    console.log(`${bien ? 'OK  ' : 'FALLA'} ${nombre.padEnd(38)} -> ${detalle}`);
   }
 
   console.log('');

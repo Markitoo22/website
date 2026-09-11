@@ -301,6 +301,7 @@ html.booting .rise{ animation: none; }
 .track__val u{ text-decoration: none; font-size: 10px; color: var(--muted); margin-left: 2px; }
 .panel__foot{
   margin: 0; padding-top: 16px; border-top: 1px solid var(--line-soft);
+  text-align: center;
   font-family: var(--prose); font-size: 12.5px; line-height: 1.65; color: var(--muted);
 }
 
@@ -327,6 +328,89 @@ html.booting .rise{ animation: none; }
   font-size: .38em; font-weight: 400; letter-spacing: .06em;
 }
 .stat__l{ margin-top: 10px; font-family: var(--tech); font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+
+/* ============ la frase ============ */
+/* Grid de tres columnas: la linea que entra desde el margen izquierdo, el
+   texto, y la linea que sale al derecho. Con 1fr a los lados las lineas
+   llegan exactamente hasta donde llegan las cajas de arriba, sea cual sea
+   el largo de la frase; el minimo evita que desaparezcan con una frase
+   larga en pantalla angosta (ahi el texto prefiere cortarse). */
+.claim{
+  display: grid;
+  grid-template-columns: minmax(26px, 1fr) auto minmax(26px, 1fr);
+  align-items: center;
+  gap: clamp(14px, 2.6vw, 30px);
+  margin: clamp(24px, 3.4vw, 38px) 0 0;
+  animation: claimShine 7s linear infinite;
+}
+
+/* ---- el destello ----
+   NO es una capa de luz por encima: cada pieza (las dos lineas y el
+   texto) se PINTA con el degradado del destello, asi solo se ve donde
+   hay tinta y nada sobre el fondo.
+   El truco para que sea UN reflejo que viaja y no tres que prenden a la
+   vez es background-attachment: fixed, que pone el degradado en
+   coordenadas del viewport: las tres piezas muestran su tajada del
+   mismo dibujo.
+   La posicion se anima una sola vez, en .claim, sobre una propiedad
+   heredada: asi las tres van sincronizadas por construccion. */
+@property --claim-x{
+  syntax: "<length>";
+  inherits: true;
+  initial-value: -45vw;
+}
+/* Arranca y termina afuera de la pantalla, y a velocidad constante: sin
+   aceleracion no se percibe ni la aparicion ni el frenado. El resto del
+   ciclo espera con el destello ya fuera de cuadro. */
+@keyframes claimShine{
+  0%        { --claim-x: -45vw; }
+  34%, 100% { --claim-x: 130vw; }
+}
+
+.claim::before, .claim::after{
+  content: ''; height: 1px;
+  background-image:
+    linear-gradient(100deg, transparent, var(--claim-shine), transparent),
+    linear-gradient(90deg, transparent, var(--claim-line));
+  background-attachment: fixed, scroll;
+  background-repeat: no-repeat, no-repeat;
+  background-size: 34vw 100%, 100% 100%;
+  background-position: var(--claim-x) 0, 0 0;
+}
+.claim::after{
+  background-image:
+    linear-gradient(100deg, transparent, var(--claim-shine), transparent),
+    linear-gradient(90deg, var(--claim-line), transparent);
+}
+
+.claim__t{
+  font-family: var(--tech);
+  font-size: clamp(.88rem, 1.75vw, 1.14rem); font-weight: 700;
+  text-transform: uppercase; letter-spacing: .16em;
+  color: var(--accent);
+  text-align: center; text-wrap: balance;
+  /* el letter-spacing tambien queda DESPUES de la ultima letra, asi que el
+     texto se veria corrido a la izquierda entre las dos lineas: este margen
+     negativo descuenta justo ese sobrante */
+  margin-right: -.16em;
+}
+/* El texto tambien se pinta con el destello, recortado a los glifos. Va
+   detras de @supports porque necesita color: transparent, y sin recorte
+   por texto la frase quedaria invisible. */
+@supports (background-clip: text) or (-webkit-background-clip: text){
+  .claim__t{
+    background-image:
+      linear-gradient(100deg, transparent, var(--claim-shine), transparent),
+      linear-gradient(var(--accent), var(--accent));
+    background-attachment: fixed, scroll;
+    background-repeat: no-repeat, no-repeat;
+    background-size: 34vw 100%, 100% 100%;
+    background-position: var(--claim-x) 0, 0 0;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
 
 /* ============ pasos ============ */
 .steps{
@@ -379,6 +463,8 @@ html.booting .rise{ animation: none; }
   .steps{ grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
 @media (max-width: 620px){
+  .claim{ gap: 12px; grid-template-columns: minmax(18px,1fr) auto minmax(18px,1fr); }
+  .claim__t{ letter-spacing: .12em; margin-right: -.12em; }
   .top__in{ height: 56px; }
   .brand__name{ font-size: 10px; letter-spacing: .14em; }
   .brand__mark{ height: 26px; }
@@ -415,6 +501,7 @@ html.booting .rise{ animation: none; }
   .scanlines{ display: none; }     /* al 2,2% de opacidad no se ve en un celular */
 }
 @media (prefers-reduced-motion: reduce){
+  .claim{ animation: none; --claim-x: -45vw; }
   html{ scroll-behavior: auto; }
   *{ animation-duration: .001s !important; animation-delay: 0s !important; transition-duration: .001s !important; }
   .dot{ animation: none; }

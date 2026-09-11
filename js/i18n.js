@@ -30,13 +30,24 @@
   'use strict';
 
   /* ------------------------------------------------------------------
-     EL NUMERO DE WHATSAPP, en un solo lugar. Los cuatro botones y el
-     texto del pie salen de aca; lo que esta escrito en index.html es
-     nada mas el respaldo para cuando no carga el JS.
-     Lo edita la herramienta de EDIT/, igual que los precios (PRECIOS)
-     y la frase del subtitulo (la clave 'frase' de cada idioma).
+     LOS VALORES EDITABLES salen de config_editor.js, el unico archivo
+     que toca la herramienta de EDIT/: los dos precios, el telefono, el
+     color y la frase (con una entrada por idioma).
+
+     EMERGENCIA es el respaldo, y se usa SOLO si ese archivo no cargo o
+     quedo mal escrito. No hay que mantenerlo al dia: existe para que
+     el sitio no aparezca vacio, no para ser la verdad.
      ------------------------------------------------------------------ */
-  var TELEFONO = '1155870867';          /* area 11 + 8 digitos, sin el 15 */
+  var CONF = window.MLPC || {};
+  var EMERGENCIA = {
+    precioAR:  '89999',
+    precioUSD: '89.99',
+    telefono:  '1155870867',
+    frase:     'Solución garantizada'
+  };
+
+  /* area 11 + 8 digitos, sin el 15 */
+  var TELEFONO = String(CONF.telefono || EMERGENCIA.telefono).replace(/\D/g, '');
 
   var LANGS = ['es', 'en', 'pt', 'fr', 'de', 'it'];
   var FALLBACK = 'en';
@@ -52,7 +63,6 @@
       desc: 'Puesta a punto de PC 100% a distancia: más FPS, menos temperatura, menos ruido. 15 años optimizando equipos.',
       eyebrow_hero: 'Puesta a punto a distancia · desde 2011',
       h1: '<span>Más <em>rápida</em></span><span>que nueva</span>',
-      frase: 'Solución garantizada.',
       sub_exp: 'Más de <b>15 años</b> de experiencia.',
       cta_hero: 'Pedir turno',
       link_results: 'Ver resultados',
@@ -95,7 +105,6 @@
       desc: '100% remote PC tune-up: more FPS, lower temperatures, less noise. 15 years optimizing rigs.',
       eyebrow_hero: 'Remote PC tune-up · since 2011',
       h1: '<span><em>Faster</em></span><span>than new</span>',
-      frase: 'Guaranteed solution.',
       sub_exp: 'More than <b>15 years</b> of experience.',
       cta_hero: 'Book a session',
       link_results: 'See results',
@@ -138,7 +147,6 @@
       desc: 'Otimização de PC 100% a distância: mais FPS, menos temperatura, menos ruído. 15 anos otimizando máquinas.',
       eyebrow_hero: 'Otimização a distância · desde 2011',
       h1: '<span>Mais <em>rápido</em></span><span>que novo</span>',
-      frase: 'Solução garantida.',
       sub_exp: 'Mais de <b>15 anos</b> de experiência.',
       cta_hero: 'Agendar sessão',
       link_results: 'Ver resultados',
@@ -182,7 +190,6 @@
       desc: 'Optimisation PC 100 % à distance : plus de FPS, moins de chaleur, moins de bruit. 15 ans de métier.',
       eyebrow_hero: 'Optimisation PC à distance · depuis 2011',
       h1: '<span>Plus <em>rapide</em></span><span>que neuf</span>',
-      frase: 'Solution garantie.',
       sub_exp: 'Plus de <b>15 ans</b> d’expérience.',
       cta_hero: 'Réserver une session',
       link_results: 'Voir les résultats',
@@ -225,7 +232,6 @@
       desc: 'PC-Optimierung aus der Ferne: mehr FPS, weniger Hitze, weniger Lärm. 15 Jahre Erfahrung.',
       eyebrow_hero: 'PC-Optimierung per Fernwartung · seit 2011',
       h1: '<span><em>Schneller</em></span><span>als neu</span>',
-      frase: 'Garantierte Lösung.',
       sub_exp: 'Über <b>15 Jahre</b> Erfahrung.',
       cta_hero: 'Termin buchen',
       link_results: 'Ergebnisse ansehen',
@@ -268,7 +274,6 @@
       desc: 'Ottimizzazione PC 100% a distanza: più FPS, meno temperatura, meno rumore. 15 anni di esperienza.',
       eyebrow_hero: 'Ottimizzazione PC a distanza · dal 2011',
       h1: '<span>Più <em>veloce</em></span><span>che nuovo</span>',
-      frase: 'Soluzione garantita.',
       sub_exp: 'Oltre <b>15 anni</b> di esperienza.',
       cta_hero: 'Prenota una sessione',
       link_results: 'Vedi i risultati',
@@ -364,8 +369,8 @@
      El monto va como lo entiende JS (punto decimal) y se formatea despues
      segun el idioma: 89999 -> "89.999" en es, "89,999" en en. */
   var PRECIOS = {
-    AR:     { monto: '79999', moneda: 'ARS' },
-    resto:  { monto: '79.99', moneda: 'USD' }
+    AR:     { monto: String(CONF.precioAR  || EMERGENCIA.precioAR),  moneda: 'ARS' },
+    resto:  { monto: String(CONF.precioUSD || EMERGENCIA.precioUSD), moneda: 'USD' }
   };
 
   /* Zonas horarias argentinas, para acertar la moneda en el primer pintado
@@ -438,6 +443,13 @@
     return false;
   }
 
+  /* La frase del idioma pedido. Si falta esa traduccion cae en la
+     española, y si falta el archivo entero, en la de emergencia. */
+  function frase(lang) {
+    var f = CONF.frase || {};
+    return f[lang] || f.es || EMERGENCIA.frase;
+  }
+
   /* 1155870867 -> 11 5587-0867 */
   function telVisible(tel) {
     if (tel.length !== 10) return tel;
@@ -506,6 +518,13 @@
     for (i = 0; i < nodes.length; i++) {
       var pair = nodes[i].getAttribute('data-i18n-attr').split(':');
       if (t[pair[1]] != null) nodes[i].setAttribute(pair[0], t[pair[1]]);
+    }
+
+    /* La frase sale de config_editor.js, que tiene una entrada por
+       idioma: se muestra la del idioma detectado. */
+    nodes = document.querySelectorAll('[data-frase]');
+    for (i = 0; i < nodes.length; i++) {
+      nodes[i].textContent = frase(lang);
     }
 
     /* Todos los botones de WhatsApp salen del MISMO numero, con el

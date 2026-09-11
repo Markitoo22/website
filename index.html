@@ -45,13 +45,17 @@
     fbq('track', 'PageView');
   }
 </script>
+<!-- EL UNICO ARCHIVO EDITABLE: precios, telefono, color y frase.
+     Va aca arriba y sin defer porque el color de marca tiene que estar
+     puesto antes del primer pintado. -->
+<script src="config_editor.js?v=20260911d"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Quantico:wght@400;700&display=swap">
 <!-- ?v= corta el cache del CDN: Pages sirve con max-age=600 y cada nodo
      guarda su copia, asi que sin esto un visitante (o un celular en 4G,
      que sale por otro nodo) puede ver hasta 10 minutos la version vieja.
      SUBIR ESTE NUMERO EN CADA DEPLOY que toque css/ o js/. -->
-<link rel="stylesheet" href="css/theme.css?v=20260911c">
-<link rel="stylesheet" href="css/styles.css?v=20260911c">
+<link rel="stylesheet" href="css/theme.css?v=20260911d">
+<link rel="stylesheet" href="css/styles.css?v=20260911d">
 </head>
 <body>
 <canvas id="plexus" aria-hidden="true"></canvas>
@@ -85,7 +89,7 @@
           </button>
           <div class="lang__menu" id="langMenu" role="listbox" aria-label="Idioma / Language"></div>
         </div>
-        <a class="top__cta" href="https://wa.me/5491155870867" data-wa="header">
+        <a class="top__cta" data-wa="header">
           <span class="dot" aria-hidden="true"></span> WhatsApp
         </a>
       </div>
@@ -96,9 +100,9 @@
     <section class="row hero">
       <p class="eyebrow rise d1"><i aria-hidden="true"></i> <span data-i18n="eyebrow_hero">Puesta a punto a distancia &middot; desde 2011</span></p>
       <h1 class="hero__h1 rise d2" data-i18n-html="h1"><span>Más <em>rápida</em></span><span>que nueva</span></h1>
-      <p class="hero__sub rise d3"><span data-i18n="frase">Solución garantizada.</span> <span data-i18n-html="sub_exp">Más de <b>15 años</b> de experiencia.</span></p>
+      <p class="hero__sub rise d3" data-i18n-html="sub_exp">Más de <b>15 años</b> de experiencia.</p>
       <div class="actions rise d4">
-        <a class="btn" href="https://wa.me/5491155870867" data-wa="hero">
+        <a class="btn" data-wa="hero">
           <span data-i18n="cta_hero">Pedir turno</span>
           <svg width="15" height="10" viewBox="0 0 15 10" fill="none" aria-hidden="true"><path d="M1 5h12M9 1l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
@@ -111,7 +115,7 @@
       <div class="stats">
         <div class="stat">
           <!-- el monto y la moneda los pone js/i18n.js segun el pais -->
-          <div class="stat__n"><span id="price" data-count="79999">79.999</span><s id="currency"> ARS</s></div>
+          <div class="stat__n"><span id="price" data-count="0">&mdash;</span><s id="currency"></s></div>
           <div class="stat__l" data-i18n="s_price">Precio por sesión promedio</div>
         </div>
         <div class="stat">
@@ -119,6 +123,8 @@
           <div class="stat__l" data-i18n="s_session">Duración promedio</div>
         </div>
       </div>
+      <!-- la frase que edita el dueño; el texto va en mayusculas por CSS -->
+      <p class="claim"><span class="claim__t" data-frase></span></p>
     </section>
     <section class="row sec" data-reveal>
       <div class="sec__head">
@@ -189,7 +195,7 @@
       <p class="eyebrow"><i aria-hidden="true"></i> <span data-i18n="eyebrow_close">Cupos limitados por semana</span></p>
       <h2 class="close__h" data-i18n="close_h">¿Arrancamos?</h2>
       <div class="actions">
-        <a class="btn btn--big" href="https://wa.me/5491155870867" data-wa="cierre">
+        <a class="btn btn--big" data-wa="cierre">
           <span data-i18n="cta_close">Escribime por WhatsApp</span>
           <svg width="15" height="10" viewBox="0 0 15 10" fill="none" aria-hidden="true"><path d="M1 5h12M9 1l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
@@ -201,13 +207,13 @@
 
   <footer class="row foot">
     <span>ML PC Performance &middot; 2026</span>
-    <a href="https://wa.me/5491155870867" data-wa="footer" data-wa-texto>11 5587-0867</a>
+    <a data-wa="footer" data-wa-texto>&mdash;</a>
   </footer>
 </div>
 
-<script src="js/i18n.js?v=20260911c"></script>
-<script src="js/plexus.js?v=20260911c"></script>
-<script src="js/drag.js?v=20260911c"></script>
-<script src="js/meta.js?v=20260911c"></script>
+<script src="js/i18n.js?v=20260911d"></script>
+<script src="js/plexus.js?v=20260911d"></script>
+<script src="js/drag.js?v=20260911d"></script>
+<script src="js/meta.js?v=20260911d"></script>
 </body>
 </html>

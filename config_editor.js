@@ -19,19 +19,19 @@
    JSON igual; lo unico distinto es como lo carga el navegador.
    ================================================================== */
 window.MLPC = {
-  "precioAR": "79999",
-  "precioUSD": "79.99",
-  "telefono": "1155870867",
-  "color": "#00d19d",
-  "frase": {
-    "de": "Garantierte Lösung",
-    "en": "Guaranteed solution",
-    "es": "Solución garantizada",
-    "fr": "Solution garantie",
-    "it": "Soluzione garantita",
-    "pt": "Solução garantida"
-  }
-};
+    "precioAR": "79999",
+    "precioUSD": "49.99",
+    "telefono": "1155870867",
+    "color": "#00d19d",
+    "frase": {
+      "de": "Garantierte Lösung",
+      "en": "Guaranteed solution",
+      "es": "Solución garantizada",
+      "fr": "Solution garantie",
+      "it": "Soluzione garantita",
+      "pt": "Solução garantida"
+    }
+  };
 
 /* El color, antes del primer pintado: un estilo en linea sobre <html>
    le gana al :root de css/theme.css, que queda como color de

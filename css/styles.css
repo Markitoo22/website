@@ -495,6 +495,12 @@ html.booting .rise{ animation: none; }
   .steps{ grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
 @media (max-width: 620px){
+  /* En un telefono los paddings en vh se van de escala: el de arriba de la
+     pagina (11vh) y los dos que separan el hero de los numeros (7vh + 7vh,
+     uno de cada seccion) sumaban casi una pantalla de aire. Fijos en px,
+     que a este ancho el alto de la ventana ya no aporta nada. */
+  .hero{ padding-block: 34px 28px; }
+  .hero + .sec{ padding-top: 28px; }
   .claim{ gap: 12px; grid-template-columns: minmax(18px,1fr) auto minmax(18px,1fr); }
   .claim__t{ letter-spacing: .12em; margin-right: -.12em; }
   .top__in{ height: 56px; }

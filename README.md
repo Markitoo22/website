@@ -14,6 +14,7 @@ css/styles.css    estilos (ningun color literal)
 js/i18n.js        TODA LA COPY, en 6 idiomas, y la deteccion por pais
 js/plexus.js      fondo reactivo al mouse, entradas, conteo de numeros
 js/drag.js        arrastre de la pagina con el click, con inercia
+js/meta.js        pixel de Meta: eventos Contact y Lead al tocar WhatsApp
 test-i18n.js      test de la deteccion de idioma: node test-i18n.js
 CNAME             el dominio propio que usa GitHub Pages
 .nojekyll         que Pages publique los archivos tal cual, sin procesarlos
@@ -169,6 +170,64 @@ WhatsApp le sale en ingles.
 - Agregar un idioma: su bloque en `DICT`, su codigo en `LANGS`, sus paises en
   `COUNTRY`, su nombre en `NAMES` y (opcional) sus zonas en `ZONES`.
 - Sacar uno: borrarlo de `LANGS`.
+
+## Pixel de Meta
+
+Sirve para que Meta optimice la campaña hacia gente que realmente toca el
+boton de WhatsApp, en vez de hacia clicks baratos.
+
+**El ID del pixel se pone en un solo lugar**, en el `<head>` de `index.html`:
+
+```js
+window.MLPC_PIXEL = '';      // 15 o 16 digitos
+```
+
+Sale de Events Manager -> Origenes de datos -> el pixel. Mientras ese campo
+este vacio la pagina no carga nada de Meta: ni el script, ni las cookies.
+
+`js/meta.js` escucha el click en los cuatro botones de WhatsApp y manda dos
+eventos estandar sobre ese mismo click:
+
+| Evento    | Como se llama en Ads Manager |
+|-----------|------------------------------|
+| `Contact` | Contactar                    |
+| `Lead`    | Cliente potencial            |
+
+**Son el mismo click contado dos veces.** En Ads Manager hay que elegir UNO
+como evento de conversion (usar `Lead`) y leer el otro como dato. Sumarlos da
+el doble de lo que paso.
+
+Cada evento lleva dos parametros:
+
+- `content_name`: que boton fue (`header`, `hero`, `cierre`, `footer`)
+- `content_category`: en que idioma estaba la pagina (`es`, `en`, `pt`...)
+
+Detalles de la implementacion:
+
+- El listener esta en `document` y en fase de burbuja **a proposito**:
+  `js/drag.js` mata el click con un listener de captura en `window` cuando el
+  puntero se movio mas de 6 px, asi que arrastrar la pagina y soltar arriba
+  del boton no dispara un lead falso.
+- Dos clicks al mismo boton dentro de 1,2 s cuentan como uno.
+- Lo que se mide es la INTENCION (abrio WhatsApp), no la conversacion: lo que
+  se hable adentro de WhatsApp no se ve desde la web. Para eso haria falta la
+  API de Conversiones mandando el evento desde el telefono o el CRM.
+
+### Que falta hacer del lado de Meta
+
+1. Pegar el ID en `index.html` y publicar.
+2. Entrar a la pagina y tocar un boton de WhatsApp. **Hasta que el pixel no
+   recibe su primer evento, el desplegable de "evento de conversion" aparece
+   vacio**: Meta solo lista eventos que ya vio.
+3. Verificarlo en Events Manager -> Probar eventos, con la URL del sitio.
+4. Events Manager -> Configuracion de eventos web -> priorizar los eventos del
+   dominio. Sin esto, el trafico de iPhone optimiza mucho peor.
+5. En la campaña: conjunto de datos = el pixel, evento de conversion = Cliente
+   potencial.
+
+El dominio ya esta verificado en Meta desde la epoca de Shopify (el
+`TXT facebook-domain-verification` del DNS), siempre que sea el mismo Business
+Manager.
 
 ## Logo
 

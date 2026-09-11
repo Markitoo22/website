@@ -49,6 +49,23 @@
   /* area 11 + 8 digitos, sin el 15 */
   var TELEFONO = String(CONF.telefono || EMERGENCIA.telefono).replace(/\D/g, '');
 
+  /* ------------------------------------------------------------------
+     LOS AÑOS DE OFICIO SE CUENTAN SOLOS: el diccionario escribe {anios}
+     y aca se reemplaza por el año actual menos el primero. Asi el 1 de
+     enero el numero sube sin que nadie toque el sitio.
+
+     El techo y el piso son por las fechas mal puestas: una PC con la
+     pila del reloj agotada arranca en 1970 o en 2010, y justo esa es la
+     computadora que entra a esta pagina. Antes que "mas de -41 años",
+     el numero de cuando se escribio esto.
+     ------------------------------------------------------------------ */
+  var DESDE = 2011;
+  var ANIOS = String(Math.min(Math.max(new Date().getFullYear() - DESDE, 15), 40));
+
+  function conAnios(txt) {
+    return txt.indexOf('{anios}') < 0 ? txt : txt.split('{anios}').join(ANIOS);
+  }
+
   var LANGS = ['es', 'en', 'pt', 'fr', 'de', 'it'];
   var FALLBACK = 'en';
 
@@ -60,13 +77,13 @@
   var DICT = {
 
     es: {
-      desc: 'Puesta a punto de PC 100% a distancia: más FPS, menos temperatura, menos ruido. 15 años optimizando equipos.',
+      desc: 'Puesta a punto de PC 100% a distancia: más FPS, menos temperatura, menos ruido. {anios} años optimizando equipos.',
       eyebrow_hero: 'Puesta a punto a distancia · desde 2011',
       h1: '<span>Más <em>rápida</em></span><span>que nueva</span>',
-      sub_exp: 'Más de <b>15 años</b> de experiencia.',
+      sub_exp: 'Más de <b>{anios} años</b> de experiencia.',
       cta_hero: 'Pedir turno',
       link_results: 'Ver resultados',
-      note_hero: '100% a distancia · sin mover la máquina · respondo el mismo día',
+      note_hero: 'Sin mover la máquina · respondo el mismo día',
       m_fps: 'FPS promedio',
       m_low: 'FPS 1% low',
       m_temp: 'Temperatura en carga',
@@ -102,13 +119,13 @@
     },
 
     en: {
-      desc: '100% remote PC tune-up: more FPS, lower temperatures, less noise. 15 years optimizing rigs.',
+      desc: '100% remote PC tune-up: more FPS, lower temperatures, less noise. {anios} years optimizing rigs.',
       eyebrow_hero: 'Remote PC tune-up · since 2011',
       h1: '<span><em>Faster</em></span><span>than new</span>',
-      sub_exp: 'More than <b>15 years</b> of experience.',
+      sub_exp: 'More than <b>{anios} years</b> of experience.',
       cta_hero: 'Book a session',
       link_results: 'See results',
-      note_hero: '100% remote · your PC never leaves your desk · same-day reply',
+      note_hero: 'Your PC never leaves your desk · same-day reply',
       m_fps: 'Average FPS',
       m_low: '1% low FPS',
       m_temp: 'Temperature under load',
@@ -144,13 +161,13 @@
     },
 
     pt: {
-      desc: 'Otimização de PC 100% a distância: mais FPS, menos temperatura, menos ruído. 15 anos otimizando máquinas.',
+      desc: 'Otimização de PC 100% a distância: mais FPS, menos temperatura, menos ruído. {anios} anos otimizando máquinas.',
       eyebrow_hero: 'Otimização a distância · desde 2011',
       h1: '<span>Mais <em>rápido</em></span><span>que novo</span>',
-      sub_exp: 'Mais de <b>15 anos</b> de experiência.',
+      sub_exp: 'Mais de <b>{anios} anos</b> de experiência.',
       cta_hero: 'Agendar sessão',
       link_results: 'Ver resultados',
-      note_hero: '100% a distância · sem sair de casa · respondo no mesmo dia',
+      note_hero: 'Sem sair de casa · respondo no mesmo dia',
       m_fps: 'FPS médio',
       m_low: 'FPS 1% low',
       m_temp: 'Temperatura em carga',
@@ -187,13 +204,13 @@
     },
 
     fr: {
-      desc: 'Optimisation PC 100 % à distance : plus de FPS, moins de chaleur, moins de bruit. 15 ans de métier.',
+      desc: 'Optimisation PC 100 % à distance : plus de FPS, moins de chaleur, moins de bruit. {anios} ans de métier.',
       eyebrow_hero: 'Optimisation PC à distance · depuis 2011',
       h1: '<span>Plus <em>rapide</em></span><span>que neuf</span>',
-      sub_exp: 'Plus de <b>15 ans</b> d’expérience.',
+      sub_exp: 'Plus de <b>{anios} ans</b> d’expérience.',
       cta_hero: 'Réserver une session',
       link_results: 'Voir les résultats',
-      note_hero: '100 % à distance · sans déplacer la machine · réponse le jour même',
+      note_hero: 'Sans déplacer la machine · réponse le jour même',
       m_fps: 'FPS moyens',
       m_low: 'FPS 1% low',
       m_temp: 'Température en charge',
@@ -229,13 +246,13 @@
     },
 
     de: {
-      desc: 'PC-Optimierung aus der Ferne: mehr FPS, weniger Hitze, weniger Lärm. 15 Jahre Erfahrung.',
+      desc: 'PC-Optimierung aus der Ferne: mehr FPS, weniger Hitze, weniger Lärm. {anios} Jahre Erfahrung.',
       eyebrow_hero: 'PC-Optimierung per Fernwartung · seit 2011',
       h1: '<span><em>Schneller</em></span><span>als neu</span>',
-      sub_exp: 'Über <b>15 Jahre</b> Erfahrung.',
+      sub_exp: 'Über <b>{anios} Jahre</b> Erfahrung.',
       cta_hero: 'Termin buchen',
       link_results: 'Ergebnisse ansehen',
-      note_hero: '100 % aus der Ferne · der Rechner bleibt bei dir · Antwort am selben Tag',
+      note_hero: 'Der Rechner bleibt bei dir · Antwort am selben Tag',
       m_fps: 'Durchschnittliche FPS',
       m_low: '1% low FPS',
       m_temp: 'Temperatur unter Last',
@@ -271,13 +288,13 @@
     },
 
     it: {
-      desc: 'Ottimizzazione PC 100% a distanza: più FPS, meno temperatura, meno rumore. 15 anni di esperienza.',
+      desc: 'Ottimizzazione PC 100% a distanza: più FPS, meno temperatura, meno rumore. {anios} anni di esperienza.',
       eyebrow_hero: 'Ottimizzazione PC a distanza · dal 2011',
       h1: '<span>Più <em>veloce</em></span><span>che nuovo</span>',
-      sub_exp: 'Oltre <b>15 anni</b> di esperienza.',
+      sub_exp: 'Oltre <b>{anios} anni</b> di esperienza.',
       cta_hero: 'Prenota una sessione',
       link_results: 'Vedi i risultati',
-      note_hero: "100% a distanza · il PC resta dov'è · risposta lo stesso giorno",
+      note_hero: "Il PC resta dov'è · risposta lo stesso giorno",
       m_fps: 'FPS medi',
       m_low: 'FPS 1% low',
       m_temp: 'Temperatura sotto carico',
@@ -504,20 +521,20 @@
     var nodes = document.querySelectorAll('[data-i18n]');
     for (var i = 0; i < nodes.length; i++) {
       var k = nodes[i].getAttribute('data-i18n');
-      if (t[k] != null) nodes[i].textContent = t[k];
+      if (t[k] != null) nodes[i].textContent = conAnios(t[k]);
     }
 
     nodes = document.querySelectorAll('[data-i18n-html]');
     for (i = 0; i < nodes.length; i++) {
       var kh = nodes[i].getAttribute('data-i18n-html');
-      if (t[kh] != null) nodes[i].innerHTML = t[kh];   /* el diccionario es nuestro, no entra nada de afuera */
+      if (t[kh] != null) nodes[i].innerHTML = conAnios(t[kh]);   /* el diccionario es nuestro, no entra nada de afuera */
     }
 
     /* atributos: data-i18n-attr="content:desc" */
     nodes = document.querySelectorAll('[data-i18n-attr]');
     for (i = 0; i < nodes.length; i++) {
       var pair = nodes[i].getAttribute('data-i18n-attr').split(':');
-      if (t[pair[1]] != null) nodes[i].setAttribute(pair[0], t[pair[1]]);
+      if (t[pair[1]] != null) nodes[i].setAttribute(pair[0], conAnios(t[pair[1]]));
     }
 
     /* La frase sale de config_editor.js, que tiene una entrada por

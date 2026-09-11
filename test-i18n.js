@@ -33,30 +33,44 @@ const CONFIG = (() => {
   return JSON.parse(crudo.slice(desde, hasta + 1));
 })();
 
-function elemento() {
-  const attrs = {};
+function elemento(attrsIniciales = {}) {
+  const attrs = { ...attrsIniciales };
   return {
     textContent: '',
+    innerHTML: '',
     setAttribute: (k, v) => { attrs[k] = v; },
     getAttribute: (k) => (k in attrs ? attrs[k] : null),
     _attrs: attrs
   };
 }
 
-function run({ ip, tz, nav, search = '', failGeo = false, sinConfig = false }) {
+/* Reloj falso para probar la cuenta de años. i18n.js usa Date en un
+   solo lugar (new Date().getFullYear()), asi que alcanza con esto. */
+function reloj(anio) {
+  return class extends Date {
+    constructor(...a) { super(...(a.length ? a : [anio, 5, 15])); }
+  };
+}
+
+function run({ ip, tz, nav, search = '', failGeo = false, sinConfig = false, anio = null }) {
   return new Promise((resolve) => {
     const clases = new Set(['booting']);   /* la pone index.html; el JS la tiene que sacar */
     const html = { lang: '', classList: { add: (c) => clases.add(c), remove: (c) => clases.delete(c) } };
     const writes = [];
     const dom = { price: elemento(), currency: elemento() };
     const nodoFrase = elemento();
+    const nodoSub = elemento({ 'data-i18n-html': 'sub_exp' });
 
     const ctx = {
       document: {
         documentElement: html,
         /* solo devuelve el nodo de la frase: es lo unico que este test
            mira del DOM, aparte del precio */
-        querySelectorAll: (sel) => (sel === '[data-frase]' ? [nodoFrase] : []),
+        querySelectorAll: (sel) => {
+          if (sel === '[data-frase]') return [nodoFrase];
+          if (sel === '[data-i18n-html]') return [nodoSub];
+          return [];
+        },
         getElementById: (id) => dom[id] || null,
         addEventListener: () => {},
         dispatchEvent: () => {},
@@ -81,7 +95,8 @@ function run({ ip, tz, nav, search = '', failGeo = false, sinConfig = false }) {
       setTimeout: global.setTimeout,
       clearTimeout: global.clearTimeout,
       addEventListener: () => {},
-      Date, JSON, parseFloat, encodeURIComponent
+      Date: anio ? reloj(anio) : Date,
+      JSON, parseFloat, encodeURIComponent
     };
     ctx.window = ctx;
     /* sinConfig simula que config_editor.js no cargo o quedo mal escrito:
@@ -95,6 +110,7 @@ function run({ ip, tz, nav, search = '', failGeo = false, sinConfig = false }) {
       moneda: dom.currency.textContent.trim(),
       monto: dom.price.getAttribute('data-count'),
       frase: nodoFrase.textContent,
+      sub: nodoSub.innerHTML,
       writes
     }), 30);
   });
@@ -161,6 +177,42 @@ function paridad() {
   return ok;
 }
 
+/* Los años de oficio: en el diccionario va {anios} y el codigo escribe el
+   año actual menos 2011. Se prueba que no quede ningun numero a mano y
+   que la cuenta de bien, incluso con la fecha del equipo mal puesta. */
+async function aniosOficio() {
+  let ok = true;
+
+  for (const [, lang, cuerpo] of code.matchAll(/\n    ([a-z]{2}): \{([\s\S]*?)\n    \}/g)) {
+    for (const clave of ['sub_exp', 'desc']) {
+      const linea = cuerpo.match(new RegExp('\\n      ' + clave + ': (.*)'));
+      if (!linea) { ok = false; console.log(`FALLA ${lang}: no encuentro ${clave}`); continue; }
+      if (!linea[1].includes('{anios}')) {
+        ok = false;
+        console.log(`FALLA ${lang}.${clave}: el año esta escrito a mano -> ${linea[1]}`);
+      }
+    }
+  }
+  console.log(`${ok ? 'OK  ' : 'FALLA'} ningun año escrito a mano en el diccionario`);
+
+  const hoy = new Date().getFullYear();
+  const pruebas = [
+    ['este año',                     hoy,  String(hoy - 2011)],
+    ['en 2031 dice 20 solo',         2031, '20'],
+    ['reloj en 1970 (pila agotada)', 1970, '15'],   /* piso */
+    ['reloj en 2099',                2099, '40']    /* techo */
+  ];
+  for (const [nombre, anio, esperado] of pruebas) {
+    const r = await run({ ip: 'AR', tz: 'America/Argentina/Buenos_Aires', nav: ['es-AR'], anio });
+    const visto = (r.sub.match(/<b>(\d+)/) || [])[1];
+    const bien = visto === esperado;
+    if (!bien) ok = false;
+    console.log(`${bien ? 'OK  ' : 'FALLA'} ${nombre.padEnd(30)} -> "${r.sub}"` +
+                (bien ? '' : `  (esperaba ${esperado})`));
+  }
+  return ok;
+}
+
 (async () => {
   let ok = 0;
   for (const [nombre, cfg, idioma, moneda] of casos) {
@@ -187,6 +239,8 @@ function paridad() {
 
   console.log('');
   const par = paridad();
+  console.log('');
+  const anios = await aniosOficio();
   console.log(`\n${ok}/${casos.length} casos  (idioma + moneda + monto, y sin guardar estado)`);
-  process.exit(ok === casos.length && par ? 0 : 1);
+  process.exit(ok === casos.length && par && anios ? 0 : 1);
 })();

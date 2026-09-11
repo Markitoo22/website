@@ -339,7 +339,7 @@ Las instrucciones para el dueño estan en `EDIT/LEEME.txt`.
 
 ## El destello de la frase
 
-La frase de abajo de las cajas tiene un reflejo que la cruza cada 7
+La frase de abajo de las cajas tiene un reflejo que la cruza cada 3
 segundos. Dos decisiones que no se ven pero sostienen el efecto:
 
 **No es una capa de luz por encima.** Las dos lineas y el texto se
@@ -358,8 +358,8 @@ construccion.
 
 El recorrido va de `-45vw` a `130vw` (la banda mide `34vw`), asi arranca y
 termina fuera de la pantalla, y el `linear` es a proposito: con easing se
-percibe un frenado justo antes de desaparecer. El resto del ciclo espera
-con el destello fuera de cuadro.
+percibe un frenado justo antes de desaparecer. Del ciclo de 3 s, cruza en
+1,35 y el resto espera fuera de cuadro.
 
 El color sale de `--claim-shine`, que es casi blanco y no del tono de la
 marca: el destello va ENCIMA del color de marca, asi que con el mismo

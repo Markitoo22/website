@@ -253,10 +253,18 @@
     });
   }
 
-  /* ---------- brillo que sigue al cursor ---------- */
+  /* ---------- brillo y cursor propio, los dos siguen al puntero ---------- */
   if (mouse && !reduce) {
     var glow = document.getElementById('glow');
-    var gx = 0, gy = 0, queued = false;
+    var cursor = document.getElementById('cursor');
+
+    /* El cursor del sistema se apaga RECIEN ACA, y no desde el CSS: si
+       este bloque no corre (sin JS, en tactil, o con movimiento
+       reducido) queda la flecha de siempre en vez de dejar al visitante
+       sin cursor. */
+    document.documentElement.classList.add('cursor-propio');
+
+    var gx = 0, gy = 0, queued = false, visible = false;
     window.addEventListener('pointermove', function (e) {
       ptr.x = e.clientX; ptr.y = e.clientY; ptr.on = true;
       gx = e.clientX; gy = e.clientY;
@@ -265,13 +273,23 @@
       window.requestAnimationFrame(function () {
         queued = false;
         glow.style.transform = 'translate3d(' + gx + 'px,' + gy + 'px,0)';
-        glow.style.opacity = '1';
+        /* el punto va en `translate` y no en `transform`: el tamaño usa
+           `scale`, que es otra propiedad, y asi la transicion del tamaño
+           no arrastra a la posicion */
+        if (cursor) cursor.style.translate = gx + 'px ' + gy + 'px';
+        if (!visible) {
+          visible = true;
+          glow.style.opacity = '1';
+          if (cursor) cursor.style.opacity = '1';
+        }
       });
     }, { passive: true });
     window.addEventListener('pointerleave', function () {
       ptr.on = false;
       ptr.down = false;
+      visible = false;
       glow.style.opacity = '0';
+      if (cursor) cursor.style.opacity = '0';
     });
 
     /* boton apretado = atraccion. Conviven con el arrastre de la pagina:

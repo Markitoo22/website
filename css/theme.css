@@ -75,6 +75,13 @@
   --claim-line:    rgb(from var(--accent) r g b / .55);    /* lineas de la frase */
   --claim-shine:   rgb(from var(--fg) r g b / .88);       /* destello de la frase */
   --pulse:         rgb(from var(--accent) r g b / .50);    /* punto del header */
+
+  /* --- cursor propio: el punto es casi blanco (una pizca del tono de la
+         marca, para que no sea un blanco ajeno al sitio) y el halo es el
+         color canonico en dos capas --- */
+  --cursor-dot:    hsl(from var(--brand) h calc(s * .12) 98%);
+  --cursor-halo:   rgb(from var(--accent) r g b / .90);
+  --cursor-halo-2: rgb(from var(--accent) r g b / .45);
   --plexus-near:   rgb(from var(--accent-lit) r g b / .34);
   --plexus-mid:    rgb(from var(--accent-lit) r g b / .17);
   --node-hot:      rgb(from var(--accent-mid) r g b / .85);

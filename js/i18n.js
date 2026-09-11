@@ -364,8 +364,8 @@
      El monto va como lo entiende JS (punto decimal) y se formatea despues
      segun el idioma: 89999 -> "89.999" en es, "89,999" en en. */
   var PRECIOS = {
-    AR:     { monto: '89999', moneda: 'ARS' },
-    resto:  { monto: '89.99', moneda: 'USD' }
+    AR:     { monto: '79999', moneda: 'ARS' },
+    resto:  { monto: '79.99', moneda: 'USD' }
   };
 
   /* Zonas horarias argentinas, para acertar la moneda en el primer pintado

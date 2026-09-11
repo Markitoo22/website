@@ -1,6 +1,10 @@
 # proyecto anterior, no se versiona
 OLD/
 
+# la herramienta de edicion: no es parte del sitio y su config guarda
+# la llave de GitHub, que no puede terminar en el repo
+EDIT/
+
 # sistema / editor
 Thumbs.db
 Desktop.ini

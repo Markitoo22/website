@@ -16,6 +16,7 @@ js/plexus.js      fondo reactivo al mouse, entradas, conteo de numeros
 js/drag.js        arrastre de la pagina con el click, con inercia
 js/meta.js        pixel de Meta: eventos Contact y Lead al tocar WhatsApp
 test-i18n.js      test de la deteccion de idioma: node test-i18n.js
+EDIT/             herramienta del dueño para cambiar valores (NO se versiona)
 CNAME             el dominio propio que usa GitHub Pages
 .nojekyll         que Pages publique los archivos tal cual, sin procesarlos
 ```
@@ -86,7 +87,7 @@ curl -sI https://mlpcperformance.com/css/styles.css | grep -iE "age|x-cache|etag
 
 ## Idiomas
 
-Toda la copy vive en `js/i18n.js` (39 claves x 6 idiomas: es, en, pt, fr, de,
+Toda la copy vive en `js/i18n.js` (40 claves x 6 idiomas: es, en, pt, fr, de,
 it). El HTML solo tiene marcas `data-i18n="clave"`, y el texto que quedo
 escrito ahi es el español, que es lo que se ve si el JS no carga.
 
@@ -229,6 +230,62 @@ El dominio ya esta verificado en Meta desde la epoca de Shopify (el
 `TXT facebook-domain-verification` del DNS), siempre que sea el mismo Business
 Manager.
 
+## Los valores que se editan sin tocar codigo
+
+Cuatro cosas cambian seguido, asi que cada una vive en UN solo lugar y
+existe una herramienta para que el dueño las cambie solo (ver `EDIT/`).
+
+| Que | Donde vive | Respaldo en index.html |
+|-----|-----------|------------------------|
+| color de todo el sitio | `css/theme.css` → `--brand` | — |
+| los dos precios | `js/i18n.js` → `PRECIOS` | el `data-count` de `#price` |
+| el numero de WhatsApp | `js/i18n.js` → `TELEFONO` | los 4 `href` + `[data-wa-texto]` |
+| la frase del subtitulo | `js/i18n.js` → la clave `frase` de cada idioma | `[data-i18n="frase"]` |
+
+**El respaldo de index.html no es duplicacion**: es lo que se ve si el
+JS no carga, igual que el español escrito en el resto del markup. La
+fuente manda y lo sobreescribe al arrancar; la herramienta mantiene los
+dos al dia en el mismo commit.
+
+El subtitulo esta partido en dos claves a proposito: `frase` (lo que el
+dueño escribe, se traduce a los 6 idiomas) y `sub_exp` (el "mas de 15
+años de experiencia", que no se toca).
+
+El telefono son 10 digitos, `11` + 8, y de ahi salen las dos formas que
+necesita el sitio: el link `https://wa.me/549<10 digitos>` y el texto
+`11 5587-0867` del pie. Si algun dia cambia el area, hay que tocar la
+constante a mano: la herramienta deja el `11` fijo para que no se
+confunda con los 8 digitos.
+
+## EDIT/ — la herramienta del dueño
+
+Un `.exe` de Go (7 MB, sin dependencias) que abre una pagina local en el
+navegador y publica por la API de GitHub, **sin git instalado**. Esta en
+`.gitignore` porque no es parte del sitio y su configuracion guarda una
+llave de GitHub.
+
+- Lee los valores del repo en vivo al abrir: lo que muestra es siempre
+  lo que esta publicado.
+- La frase se traduce con Google Translate (el endpoint sin clave que usa
+  la extension de Chrome, con un segundo de respaldo) y las traducciones
+  se muestran editables **antes** de publicar.
+- Publica un solo commit con blob → tree → commit → ref: o entra todo o
+  no entra nada. Relee los archivos justo antes de escribir, asi no pisa
+  un cambio hecho desde otro lado.
+- Sube el `?v=` de `index.html` solo, con la fecha del dia y una letra.
+- Cada campo tiene un boton que lo devuelve a su valor **original** (la
+  variable `iniciales` de `EDIT/main.go`, horneada en el binario): los
+  valores con los que salio el sitio no se pierden por mas veces que se
+  publique encima. Es distinto de "Volver a lo publicado", que vuelve a
+  lo que esta online. Para mover esa linea de base hay que editar
+  `iniciales` y recompilar.
+- `cd EDIT && go test ./...` prueba los patrones contra los archivos
+  reales del repo: que `--brand` no agarre la declaracion comentada, que
+  las seis frases no se crucen entre bloques de idioma, que los 4 links
+  de WhatsApp se reemplacen, y que los precios vayan y vuelvan.
+
+Las instrucciones para el dueño estan en `EDIT/LEEME.txt`.
+
 ## Logo
 
 El escudo ML es un SVG **inline** en el header de `index.html` (id `logo-ml`),
@@ -273,7 +330,12 @@ en persona (desarmar, pasta termica, retiro y entrega a domicilio).
 
 ## WhatsApp
 
-Los cuatro botones apuntan a `https://wa.me/5491155870867` con el mensaje ya
-escrito. Formato del link: `54` + `9` (movil) + `11` (area, sin el 0) +
-numero (sin el 15). Si cambia el numero, hay que tocarlo en 4 lugares de
-`index.html`, incluido el texto visible del footer.
+El numero esta en `TELEFONO`, en `js/i18n.js`, y de ahi salen los cuatro
+botones y el texto del pie. Formato del link: `54` + `9` (movil) + `11`
+(area, sin el 0) + numero (sin el 15).
+
+Para cambiarlo no hace falta tocar codigo: esta en la herramienta de
+`EDIT/`. A mano, es esa unica constante (los `href` de `index.html` son
+el respaldo sin JS y conviene dejarlos iguales).
+
+El mensaje que se autocompleta es la clave `wa` de cada idioma.

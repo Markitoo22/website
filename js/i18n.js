@@ -29,6 +29,15 @@
 (function () {
   'use strict';
 
+  /* ------------------------------------------------------------------
+     EL NUMERO DE WHATSAPP, en un solo lugar. Los cuatro botones y el
+     texto del pie salen de aca; lo que esta escrito en index.html es
+     nada mas el respaldo para cuando no carga el JS.
+     Lo edita la herramienta de EDIT/, igual que los precios (PRECIOS)
+     y la frase del subtitulo (la clave 'frase' de cada idioma).
+     ------------------------------------------------------------------ */
+  var TELEFONO = '1155870867';          /* area 11 + 8 digitos, sin el 15 */
+
   var LANGS = ['es', 'en', 'pt', 'fr', 'de', 'it'];
   var FALLBACK = 'en';
 
@@ -43,7 +52,8 @@
       desc: 'Puesta a punto de PC 100% a distancia: más FPS, menos temperatura, menos ruido. 15 años optimizando equipos.',
       eyebrow_hero: 'Puesta a punto a distancia · desde 2011',
       h1: '<span>Más <em>rápida</em></span><span>que nueva</span>',
-      sub: 'Optimización a distancia. Más de <b>15 años</b> de experiencia.',
+      frase: 'Solución garantizada.',
+      sub_exp: 'Más de <b>15 años</b> de experiencia.',
       cta_hero: 'Pedir turno',
       link_results: 'Ver resultados',
       note_hero: '100% a distancia · sin mover la máquina · respondo el mismo día',
@@ -85,7 +95,8 @@
       desc: '100% remote PC tune-up: more FPS, lower temperatures, less noise. 15 years optimizing rigs.',
       eyebrow_hero: 'Remote PC tune-up · since 2011',
       h1: '<span><em>Faster</em></span><span>than new</span>',
-      sub: 'Remote optimization. More than <b>15 years</b> of experience.',
+      frase: 'Guaranteed solution.',
+      sub_exp: 'More than <b>15 years</b> of experience.',
       cta_hero: 'Book a session',
       link_results: 'See results',
       note_hero: '100% remote · your PC never leaves your desk · same-day reply',
@@ -127,7 +138,8 @@
       desc: 'Otimização de PC 100% a distância: mais FPS, menos temperatura, menos ruído. 15 anos otimizando máquinas.',
       eyebrow_hero: 'Otimização a distância · desde 2011',
       h1: '<span>Mais <em>rápido</em></span><span>que novo</span>',
-      sub: 'Otimização à distância. Mais de <b>15 anos</b> de experiência.',
+      frase: 'Solução garantida.',
+      sub_exp: 'Mais de <b>15 anos</b> de experiência.',
       cta_hero: 'Agendar sessão',
       link_results: 'Ver resultados',
       note_hero: '100% a distância · sem sair de casa · respondo no mesmo dia',
@@ -170,7 +182,8 @@
       desc: 'Optimisation PC 100 % à distance : plus de FPS, moins de chaleur, moins de bruit. 15 ans de métier.',
       eyebrow_hero: 'Optimisation PC à distance · depuis 2011',
       h1: '<span>Plus <em>rapide</em></span><span>que neuf</span>',
-      sub: 'Optimisation à distance. Plus de <b>15 ans</b> d’expérience.',
+      frase: 'Solution garantie.',
+      sub_exp: 'Plus de <b>15 ans</b> d’expérience.',
       cta_hero: 'Réserver une session',
       link_results: 'Voir les résultats',
       note_hero: '100 % à distance · sans déplacer la machine · réponse le jour même',
@@ -212,7 +225,8 @@
       desc: 'PC-Optimierung aus der Ferne: mehr FPS, weniger Hitze, weniger Lärm. 15 Jahre Erfahrung.',
       eyebrow_hero: 'PC-Optimierung per Fernwartung · seit 2011',
       h1: '<span><em>Schneller</em></span><span>als neu</span>',
-      sub: 'Optimierung aus der Ferne. Über <b>15 Jahre</b> Erfahrung.',
+      frase: 'Garantierte Lösung.',
+      sub_exp: 'Über <b>15 Jahre</b> Erfahrung.',
       cta_hero: 'Termin buchen',
       link_results: 'Ergebnisse ansehen',
       note_hero: '100 % aus der Ferne · der Rechner bleibt bei dir · Antwort am selben Tag',
@@ -254,7 +268,8 @@
       desc: 'Ottimizzazione PC 100% a distanza: più FPS, meno temperatura, meno rumore. 15 anni di esperienza.',
       eyebrow_hero: 'Ottimizzazione PC a distanza · dal 2011',
       h1: '<span>Più <em>veloce</em></span><span>che nuovo</span>',
-      sub: 'Ottimizzazione a distanza. Oltre <b>15 anni</b> di esperienza.',
+      frase: 'Soluzione garantita.',
+      sub_exp: 'Oltre <b>15 anni</b> di esperienza.',
       cta_hero: 'Prenota una sessione',
       link_results: 'Vedi i risultati',
       note_hero: "100% a distanza · il PC resta dov'è · risposta lo stesso giorno",
@@ -423,6 +438,12 @@
     return false;
   }
 
+  /* 1155870867 -> 11 5587-0867 */
+  function telVisible(tel) {
+    if (tel.length !== 10) return tel;
+    return tel.slice(0, 2) + ' ' + tel.slice(2, 6) + '-' + tel.slice(6);
+  }
+
   function pintarPrecio(esAR) {
     var p = esAR ? PRECIOS.AR : PRECIOS.resto;
     var monto = document.getElementById('price');
@@ -487,10 +508,18 @@
       if (t[pair[1]] != null) nodes[i].setAttribute(pair[0], t[pair[1]]);
     }
 
-    /* el mensaje que se autocompleta en WhatsApp, en el idioma del visitante */
-    nodes = document.querySelectorAll('a[href*="wa.me"]');
+    /* Todos los botones de WhatsApp salen del MISMO numero, con el
+       mensaje autocompletado en el idioma del visitante. */
+    var tel = TELEFONO.replace(/\D/g, '');
+    nodes = document.querySelectorAll('a[data-wa]');
     for (i = 0; i < nodes.length; i++) {
-      nodes[i].href = nodes[i].href.split('?')[0] + '?text=' + encodeURIComponent(t.wa);
+      nodes[i].href = 'https://wa.me/549' + tel + '?text=' + encodeURIComponent(t.wa);
+    }
+
+    /* el unico lugar donde el numero se lee escrito es el pie */
+    nodes = document.querySelectorAll('[data-wa-texto]');
+    for (i = 0; i < nodes.length; i++) {
+      nodes[i].textContent = telVisible(tel);
     }
 
     /* separadores segun el idioma: 89.999 / 89,999 · 89,99 / 89.99 */

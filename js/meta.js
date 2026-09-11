@@ -32,7 +32,7 @@
      puntero se movio mas de 6 px, asi que un arrastre que termina
      arriba del boton no llega hasta aca y no cuenta como lead. */
   document.addEventListener('click', function (e) {
-    var a = e.target && e.target.closest && e.target.closest('a[href*="wa.me"]');
+    var a = e.target && e.target.closest && e.target.closest('a[data-wa]');
     if (!a || typeof window.fbq !== 'function') return;
 
     var donde = a.getAttribute('data-wa') || 'otro';

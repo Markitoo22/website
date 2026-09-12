@@ -31,8 +31,9 @@
 
   /* ------------------------------------------------------------------
      LOS VALORES EDITABLES salen de config_editor.js, el unico archivo
-     que toca la herramienta de EDIT/: los dos precios, el telefono, el
-     color y la frase (con una entrada por idioma).
+     que toca la herramienta de EDIT/: los dos precios, la duracion, el
+     color y la frase (con una entrada por idioma). El telefono no: es
+     fijo y esta en el href de los botones, en index.html.
 
      EMERGENCIA es el respaldo, y se usa SOLO si ese archivo no cargo o
      quedo mal escrito. No hay que mantenerlo al dia: existe para que
@@ -43,16 +44,12 @@
     precioAR:  '89999',
     precioUSD: '89.99',
     duracion:  '30',
-    telefono:  '1155870867',
     frase:     'Solución garantizada'
   };
 
   /* minutos de la sesion, solo digitos */
   var DURACION = String(CONF.duracion || EMERGENCIA.duracion).replace(/\D/g, '') ||
                  EMERGENCIA.duracion;
-
-  /* area 11 + 8 digitos, sin el 15 */
-  var TELEFONO = String(CONF.telefono || EMERGENCIA.telefono).replace(/\D/g, '');
 
   /* ------------------------------------------------------------------
      LOS AÑOS DE OFICIO SE CUENTAN SOLOS: el diccionario escribe {anios}
@@ -69,6 +66,24 @@
 
   function conAnios(txt) {
     return txt.indexOf('{anios}') < 0 ? txt : txt.split('{anios}').join(ANIOS);
+  }
+
+  /* ------------------------------------------------------------------
+     EL NUMERO DE WHATSAPP NO SE TOCA DESDE ACA: vive escrito en el href
+     de cada boton, en index.html. Asi los botones andan aunque este
+     archivo no llegue a cargar, que es lo unico de la pagina que tiene
+     que funcionar si o si.
+
+     Lo unico que se cambia es el mensaje que se autocompleta, que si
+     depende del idioma. La base del link se lee del propio href, asi el
+     numero queda en UN solo lugar y este archivo no lo conoce.
+     ------------------------------------------------------------------ */
+  function armarLinks(texto) {
+    var nodes = document.querySelectorAll('a[data-wa]');
+    for (var i = 0; i < nodes.length; i++) {
+      var base = (nodes[i].getAttribute('href') || '').split('?')[0];
+      if (base) nodes[i].setAttribute('href', base + '?text=' + encodeURIComponent(texto));
+    }
   }
 
   var LANGS = ['es', 'en', 'pt', 'fr', 'de', 'it'];
@@ -472,12 +487,6 @@
     return f[lang] || f.es || EMERGENCIA.frase;
   }
 
-  /* 1155870867 -> 11 5587-0867 */
-  function telVisible(tel) {
-    if (tel.length !== 10) return tel;
-    return tel.slice(0, 2) + ' ' + tel.slice(2, 6) + '-' + tel.slice(6);
-  }
-
   function pintarPrecio(esAR) {
     var p = esAR ? PRECIOS.AR : PRECIOS.resto;
     var monto = document.getElementById('price');
@@ -549,19 +558,9 @@
       nodes[i].textContent = frase(lang);
     }
 
-    /* Todos los botones de WhatsApp salen del MISMO numero, con el
-       mensaje autocompletado en el idioma del visitante. */
-    var tel = TELEFONO.replace(/\D/g, '');
-    nodes = document.querySelectorAll('a[data-wa]');
-    for (i = 0; i < nodes.length; i++) {
-      nodes[i].href = 'https://wa.me/549' + tel + '?text=' + encodeURIComponent(t.wa);
-    }
-
-    /* el unico lugar donde el numero se lee escrito es el pie */
-    nodes = document.querySelectorAll('[data-wa-texto]');
-    for (i = 0; i < nodes.length; i++) {
-      nodes[i].textContent = telVisible(tel);
-    }
+    /* Ya estaban armados desde el arranque; aca solo se cambia el
+       mensaje al idioma del visitante. */
+    armarLinks(t.wa);
 
     /* la duracion tambien sale del archivo editable; se deja escrita en
        data-count y la pinta pintarNumeros() como cualquier otro numero */

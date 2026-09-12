@@ -9,7 +9,7 @@ dependencias: se publica solo con GitHub Pages.
 
 ```
 index.html        la pagina (solo markup)
-config_editor.js  EL UNICO ARCHIVO EDITABLE: precios, duracion, telefono, color, frase
+config_editor.js  EL UNICO ARCHIVO EDITABLE: precios, duracion, color, frase
 css/theme.css     la paleta: toda derivada del --brand que pone el config
 css/styles.css    estilos (ningun color literal)
 js/i18n.js        TODA LA COPY, en 6 idiomas, y la deteccion por pais
@@ -234,15 +234,16 @@ Manager.
 ## config_editor.js — el unico archivo editable
 
 Lo que cambia con el tiempo: los dos precios, la duracion de la sesion, el
-telefono, el color y la frase. Viven todas en `config_editor.js`, en la raiz,
-y **no estan escritas en ningun otro lado del sitio**.
+color y la frase. Viven todas en `config_editor.js`, en la raiz, y **no estan
+escritas en ningun otro lado del sitio**.
+
+El telefono es la excepcion y esta afuera a proposito: ver WhatsApp, abajo.
 
 ```js
 window.MLPC = {
   "precioAR": "89999",
   "precioUSD": "89.99",
   "duracion": "30",
-  "telefono": "1155870867",
   "color": "#00d19d",
   "frase": { "es": "...", "en": "...", "pt": "...", "fr": "...", "de": "...", "it": "..." }
 };
@@ -413,9 +414,18 @@ en persona (desarmar, pasta termica, retiro y entrega a domicilio).
 
 ## WhatsApp
 
-El numero esta en `config_editor.js` y de ahi salen los cuatro botones y
-el texto del pie. Formato del link: `54` + `9` (movil) + `11`
-(area, sin el 0) + numero (sin el 15).
+El numero es FIJO y esta escrito en el `href` de los cuatro botones de
+`index.html`. No pasa por `config_editor.js` ni por JavaScript: asi
+WhatsApp funciona aunque `js/i18n.js` no llegue a cargar, que es lo unico
+de la pagina que tiene que andar si o si.
+
+Formato del link: `54` + `9` (movil) + `11` (area, sin el 0) + numero
+(sin el 15), sin `+` ni guiones. Lo unico que le cambia el JS es el
+`?text=`, el mensaje autocompletado, que si depende del idioma; la base
+la lee del propio href, asi el numero queda en un solo lugar.
+
+Para cambiarlo: los cuatro `href` de `index.html` y el texto del pie.
+`node test-i18n.js` falla si quedan apuntando a numeros distintos.
 
 Para cambiarlo no hace falta tocar codigo: esta en la herramienta de
 `EDIT/`. A mano, es ese unico valor; los `href` los arma `js/i18n.js`.

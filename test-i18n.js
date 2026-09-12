@@ -21,6 +21,18 @@ const EMERGENCIA = (() => {
 
 /* El unico archivo editable. Se lee el de verdad, asi el test falla si
    alguien lo deja mal escrito o le saca un idioma. */
+/* El numero de WhatsApp ya no es editable: vive en el href de los
+   botones de index.html. Se lee de ahi, que es la unica fuente. */
+const WA = (() => {
+  const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+  const bases = [...html.matchAll(/<a[^>]*\sdata-wa=[^>]*>/g)].map((m) => {
+    const href = /href="([^"]*)"/.exec(m[0]);
+    return href ? href[1].split('?')[0] : null;
+  });
+  if (!bases.length) throw new Error('index.html: no encuentro los botones de WhatsApp');
+  return { bases };
+})();
+
 const CONFIG = (() => {
   const crudo = fs.readFileSync(path.join(__dirname, 'config_editor.js'), 'utf8');
   /* sin regex a proposito: se busca el objeto por sus llaves, asi no
@@ -33,9 +45,11 @@ const CONFIG = (() => {
   return JSON.parse(crudo.slice(desde, hasta + 1));
 })();
 
-function elemento(attrsIniciales = {}) {
+function elemento(attrsIniciales = {}, anotar = null) {
   const attrs = { ...attrsIniciales };
   return {
+    set href(v) { attrs.href = v; if (anotar) anotar.push(v); },
+    get href() { return attrs.href; },
     textContent: '',
     innerHTML: '',
     setAttribute: (k, v) => { attrs[k] = v; },
@@ -60,6 +74,10 @@ function run({ ip, tz, nav, search = '', failGeo = false, sinConfig = false, sin
     const dom = { price: elemento(), currency: elemento(), duracion: elemento() };
     const nodoFrase = elemento();
     const nodoSub = elemento({ 'data-i18n-html': 'sub_exp' });
+    /* los botones de WhatsApp: lo unico de la pagina que tiene que
+       funcionar si o si */
+    /* arranca con el href que trae el HTML, como en el navegador */
+    const nodoWa = elemento({ 'data-wa': 'hero', href: WA.bases[0] });
 
     const ctx = {
       document: {
@@ -69,6 +87,7 @@ function run({ ip, tz, nav, search = '', failGeo = false, sinConfig = false, sin
         querySelectorAll: (sel) => {
           if (sel === '[data-frase]') return [nodoFrase];
           if (sel === '[data-count]') return [dom.duracion];
+          if (sel === 'a[data-wa]') return [nodoWa];
           if (sel === '[data-i18n-html]') return [nodoSub];
           return [];
         },
@@ -115,6 +134,7 @@ function run({ ip, tz, nav, search = '', failGeo = false, sinConfig = false, sin
       monto: dom.price.getAttribute('data-count'),
       frase: nodoFrase.textContent,
       duracion: dom.duracion.textContent,
+      wa: nodoWa.getAttribute('href'),
       sub: nodoSub.innerHTML,
       writes
     }), 30);
@@ -220,6 +240,56 @@ async function aniosOficio() {
   return ok;
 }
 
+/* El numero de WhatsApp es fijo y vive en el href de los botones. Eso lo
+   vuelve lo mas robusto de la pagina (anda sin JavaScript), pero tambien
+   significa que si alguien edita uno solo de los cuatro, nadie se entera.
+   Aca se controla que los cuatro lleven al mismo lado. */
+function botonesDeWhatsApp() {
+  const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+  const anclas = [...html.matchAll(/<a[^>]*\sdata-wa="([^"]*)"[^>]*>/g)];
+  let ok = true;
+
+  if (anclas.length !== 4) {
+    ok = false;
+    console.log(`FALLA esperaba 4 botones de WhatsApp, hay ${anclas.length}`);
+  }
+
+  const bases = new Set();
+  for (const m of anclas) {
+    const href = /href="([^"]*)"/.exec(m[0]);
+    if (!href) {
+      ok = false;
+      console.log(`FALLA el boton "${m[1]}" no tiene href escrito en el HTML`);
+      continue;
+    }
+    bases.add(href[1].split('?')[0]);
+  }
+
+  if (bases.size > 1) {
+    ok = false;
+    console.log(`FALLA los botones no van todos al mismo numero: ${[...bases].join(' / ')}`);
+  }
+
+  const base = [...bases][0] || '';
+  /* 54 (pais) + 9 (movil) + 11 (area) + 8 digitos, sin + ni guiones */
+  if (!/^https:\/\/wa\.me\/549\d{10}$/.test(base)) {
+    ok = false;
+    console.log(`FALLA el link no tiene el formato oficial de wa.me: ${base}`);
+  }
+
+  /* el pie muestra el numero escrito: tiene que ser el mismo */
+  const digitos = base.replace(/\D/g, '').slice(2);        // sin el 54
+  const pie = /<a[^>]*data-wa="footer"[^>]*>([^<]*)<\/a>/.exec(html);
+  const escrito = pie ? pie[1].replace(/\D/g, '') : '';
+  if (escrito && digitos.slice(1) !== escrito) {
+    ok = false;
+    console.log(`FALLA el pie dice ${pie[1].trim()} y los botones van a ${base}`);
+  }
+
+  console.log(`${ok ? 'OK  ' : 'FALLA'} los 4 botones van al mismo numero (${base}), y el pie lo dice igual`);
+  return ok;
+}
+
 (async () => {
   let ok = 0;
   for (const [nombre, cfg, idioma, moneda] of casos) {
@@ -231,7 +301,14 @@ async function aniosOficio() {
     const frase = cfg.sinConfig ? EMERGENCIA.frase : CONFIG.frase[idioma];
     /* la duracion de la sesion sale del mismo archivo editable */
     const duracion = (cfg.sinConfig || cfg.sinDuracion) ? EMERGENCIA.duracion : CONFIG.duracion;
-    const bien = r.lang === idioma && r.moneda === moneda &&
+    /* El link tiene que conservar el numero que estaba en el HTML y solo
+       cambiarle el mensaje al idioma que se detecto. Si alguien vuelve a
+       armar la URL desde cero en el JS, el numero deja de estar en un
+       solo lugar y esto falla. */
+    const waOk = typeof r.wa === 'string' &&
+                 r.wa.startsWith(WA.bases[0] + '?text=') &&
+                 r.wa.length > (WA.bases[0] + '?text=').length;
+    const bien = waOk && r.lang === idioma && r.moneda === moneda &&
                  r.monto === montos[moneda] && r.writes.length === 0 &&
                  r.frase === frase && r.duracion === duracion &&
                  r.booting === false;      /* la compuerta SIEMPRE se levanta */
@@ -242,6 +319,7 @@ async function aniosOficio() {
     if (r.monto !== montos[moneda]) detalle += `  (monto esperado ${montos[moneda]})`;
     if (r.frase !== frase) detalle += `  (frase esperada "${frase}")`;
     if (r.duracion !== duracion) detalle += `  (duracion esperada ${duracion})`;
+    if (!waOk) detalle += `  LINK MAL: ${r.wa}  (esperaba que empiece con ${WA.bases[0]}?text=)`;
     if (r.writes.length) detalle += `  GUARDO: ${r.writes.join(', ')}`;
     if (r.booting) detalle += '  QUEDO OCULTA (compuerta trabada)';
     console.log(`${bien ? 'OK  ' : 'FALLA'} ${nombre.padEnd(38)} -> ${detalle}`);
@@ -251,6 +329,8 @@ async function aniosOficio() {
   const par = paridad();
   console.log('');
   const anios = await aniosOficio();
+  console.log('');
+  const wa = botonesDeWhatsApp();
   console.log(`\n${ok}/${casos.length} casos  (idioma + moneda + monto, y sin guardar estado)`);
-  process.exit(ok === casos.length && par && anios ? 0 : 1);
+  process.exit(ok === casos.length && par && anios && wa ? 0 : 1);
 })();

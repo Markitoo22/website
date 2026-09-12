@@ -2,10 +2,14 @@
    EL UNICO ARCHIVO EDITABLE DEL SITIO
 
    Aca viven los valores que cambian con el tiempo: los dos precios, la
-   duracion de la sesion, el telefono de WhatsApp, el color de la marca
-   y la frase.
+   duracion de la sesion, el color de la marca y la frase.
    Todo el resto del sitio los lee de aca; no estan escritos en ningun
    otro lado.
+
+   El telefono de WhatsApp NO esta aca a proposito: es fijo y vive en el
+   href de los botones, en index.html. Asi WhatsApp funciona aunque el
+   JavaScript no llegue a correr, que es lo unico de la pagina que tiene
+   que funcionar si o si. Si algun dia cambia, se cambia ahi.
 
    Lo reescribe COMPLETO la herramienta de EDIT/ cada vez que se
    publica, asi que no agregues codigo ni comentarios adentro del
@@ -23,7 +27,6 @@ window.MLPC = {
     "precioAR": "79999",
     "precioUSD": "49.99",
     "duracion": "30",
-    "telefono": "1155870867",
     "color": "#00d19d",
     "frase": {
       "de": "Garantierte Lösung",

@@ -42,9 +42,14 @@
   var EMERGENCIA = {
     precioAR:  '89999',
     precioUSD: '89.99',
+    duracion:  '30',
     telefono:  '1155870867',
     frase:     'Solución garantizada'
   };
+
+  /* minutos de la sesion, solo digitos */
+  var DURACION = String(CONF.duracion || EMERGENCIA.duracion).replace(/\D/g, '') ||
+                 EMERGENCIA.duracion;
 
   /* area 11 + 8 digitos, sin el 15 */
   var TELEFONO = String(CONF.telefono || EMERGENCIA.telefono).replace(/\D/g, '');
@@ -557,6 +562,11 @@
     for (i = 0; i < nodes.length; i++) {
       nodes[i].textContent = telVisible(tel);
     }
+
+    /* la duracion tambien sale del archivo editable; se deja escrita en
+       data-count y la pinta pintarNumeros() como cualquier otro numero */
+    var dur = document.getElementById('duracion');
+    if (dur) dur.setAttribute('data-count', DURACION);
 
     /* separadores segun el idioma: 89.999 / 89,999 · 89,99 / 89.99 */
     pintarNumeros();

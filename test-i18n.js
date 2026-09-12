@@ -52,12 +52,12 @@ function reloj(anio) {
   };
 }
 
-function run({ ip, tz, nav, search = '', failGeo = false, sinConfig = false, anio = null }) {
+function run({ ip, tz, nav, search = '', failGeo = false, sinConfig = false, sinDuracion = false, anio = null }) {
   return new Promise((resolve) => {
     const clases = new Set(['booting']);   /* la pone index.html; el JS la tiene que sacar */
     const html = { lang: '', classList: { add: (c) => clases.add(c), remove: (c) => clases.delete(c) } };
     const writes = [];
-    const dom = { price: elemento(), currency: elemento() };
+    const dom = { price: elemento(), currency: elemento(), duracion: elemento() };
     const nodoFrase = elemento();
     const nodoSub = elemento({ 'data-i18n-html': 'sub_exp' });
 
@@ -68,6 +68,7 @@ function run({ ip, tz, nav, search = '', failGeo = false, sinConfig = false, ani
            mira del DOM, aparte del precio */
         querySelectorAll: (sel) => {
           if (sel === '[data-frase]') return [nodoFrase];
+          if (sel === '[data-count]') return [dom.duracion];
           if (sel === '[data-i18n-html]') return [nodoSub];
           return [];
         },
@@ -102,6 +103,9 @@ function run({ ip, tz, nav, search = '', failGeo = false, sinConfig = false, ani
     /* sinConfig simula que config_editor.js no cargo o quedo mal escrito:
        ahi tienen que entrar los valores de emergencia */
     if (!sinConfig) ctx.MLPC = JSON.parse(JSON.stringify(CONFIG));
+    /* sinDuracion simula un config_editor.js escrito por una version
+       vieja del editor, que no conoce esa clave y la deja afuera */
+    if (sinDuracion) delete ctx.MLPC.duracion;
 
     new Function(...Object.keys(ctx), code)(...Object.values(ctx));
     setTimeout(() => resolve({
@@ -110,6 +114,7 @@ function run({ ip, tz, nav, search = '', failGeo = false, sinConfig = false, ani
       moneda: dom.currency.textContent.trim(),
       monto: dom.price.getAttribute('data-count'),
       frase: nodoFrase.textContent,
+      duracion: dom.duracion.textContent,
       sub: nodoSub.innerHTML,
       writes
     }), 30);
@@ -135,7 +140,9 @@ const casos = [
   ['frase en aleman desde el config',    { ip: 'DE', tz: 'Europe/Berlin', nav: ['de'] },                            'de', 'USD'],
   ['frase en portugues desde el config', { ip: 'PT', tz: 'Europe/Lisbon', nav: ['pt-PT'] },                         'pt', 'USD'],
   /* sin el archivo editable: entran los valores de emergencia */
-  ['sin config_editor.js -> emergencia', { ip: 'AR', tz: 'America/Argentina/Buenos_Aires', nav: ['es-AR'], sinConfig: true }, 'es', 'ARS']
+  ['sin config_editor.js -> emergencia', { ip: 'AR', tz: 'America/Argentina/Buenos_Aires', nav: ['es-AR'], sinConfig: true }, 'es', 'ARS'],
+  /* un editor viejo regenera el archivo sin la clave de la duracion */
+  ['config sin duracion -> emergencia',  { ip: 'AR', tz: 'America/Argentina/Buenos_Aires', nav: ['es-AR'], sinDuracion: true }, 'es', 'ARS']
 ];
 
 const MONTOS = { ARS: CONFIG.precioAR, USD: CONFIG.precioUSD };
@@ -222,16 +229,19 @@ async function aniosOficio() {
     const montos = cfg.sinConfig ? MONTOS_EMERGENCIA : MONTOS;
     /* la frase tiene que salir en el idioma que se detecto */
     const frase = cfg.sinConfig ? EMERGENCIA.frase : CONFIG.frase[idioma];
+    /* la duracion de la sesion sale del mismo archivo editable */
+    const duracion = (cfg.sinConfig || cfg.sinDuracion) ? EMERGENCIA.duracion : CONFIG.duracion;
     const bien = r.lang === idioma && r.moneda === moneda &&
                  r.monto === montos[moneda] && r.writes.length === 0 &&
-                 r.frase === frase &&
+                 r.frase === frase && r.duracion === duracion &&
                  r.booting === false;      /* la compuerta SIEMPRE se levanta */
     if (bien) ok++;
-    let detalle = `${r.lang} · ${r.monto} ${r.moneda} · "${r.frase}"`;
+    let detalle = `${r.lang} · ${r.monto} ${r.moneda} · ${r.duracion} min · "${r.frase}"`;
     if (r.lang !== idioma) detalle += `  (idioma esperado ${idioma})`;
     if (r.moneda !== moneda) detalle += `  (moneda esperada ${moneda})`;
     if (r.monto !== montos[moneda]) detalle += `  (monto esperado ${montos[moneda]})`;
     if (r.frase !== frase) detalle += `  (frase esperada "${frase}")`;
+    if (r.duracion !== duracion) detalle += `  (duracion esperada ${duracion})`;
     if (r.writes.length) detalle += `  GUARDO: ${r.writes.join(', ')}`;
     if (r.booting) detalle += '  QUEDO OCULTA (compuerta trabada)';
     console.log(`${bien ? 'OK  ' : 'FALLA'} ${nombre.padEnd(38)} -> ${detalle}`);

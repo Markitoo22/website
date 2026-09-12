@@ -1,8 +1,9 @@
 /* ==================================================================
    EL UNICO ARCHIVO EDITABLE DEL SITIO
 
-   Aca viven los cuatro valores que cambian con el tiempo: los dos
-   precios, el telefono de WhatsApp, el color de la marca y la frase.
+   Aca viven los valores que cambian con el tiempo: los dos precios, la
+   duracion de la sesion, el telefono de WhatsApp, el color de la marca
+   y la frase.
    Todo el resto del sitio los lee de aca; no estan escritos en ningun
    otro lado.
 
@@ -21,6 +22,7 @@
 window.MLPC = {
     "precioAR": "79999",
     "precioUSD": "49.99",
+    "duracion": "30",
     "telefono": "1155870867",
     "color": "#00d19d",
     "frase": {

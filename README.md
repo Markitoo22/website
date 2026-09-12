@@ -9,7 +9,7 @@ dependencias: se publica solo con GitHub Pages.
 
 ```
 index.html        la pagina (solo markup)
-config_editor.js  EL UNICO ARCHIVO EDITABLE: precios, telefono, color y frase
+config_editor.js  EL UNICO ARCHIVO EDITABLE: precios, duracion, telefono, color, frase
 css/theme.css     la paleta: toda derivada del --brand que pone el config
 css/styles.css    estilos (ningun color literal)
 js/i18n.js        TODA LA COPY, en 6 idiomas, y la deteccion por pais
@@ -233,14 +233,15 @@ Manager.
 
 ## config_editor.js — el unico archivo editable
 
-Cuatro cosas cambian con el tiempo: los dos precios, el telefono, el color
-y la frase. Viven todas en `config_editor.js`, en la raiz, y **no estan
-escritas en ningun otro lado del sitio**.
+Lo que cambia con el tiempo: los dos precios, la duracion de la sesion, el
+telefono, el color y la frase. Viven todas en `config_editor.js`, en la raiz,
+y **no estan escritas en ningun otro lado del sitio**.
 
 ```js
 window.MLPC = {
   "precioAR": "89999",
   "precioUSD": "89.99",
+  "duracion": "30",
   "telefono": "1155870867",
   "color": "#00d19d",
   "frase": { "es": "...", "en": "...", "pt": "...", "fr": "...", "de": "...", "it": "..." }
@@ -403,9 +404,9 @@ Requiere color relativo de CSS: Chrome/Edge 119+, Safari 16.4+, Firefox 128+.
 
 ## Antes de mandarla a produccion
 
-1. Son de ejemplo y hay que confirmarlos: los numeros del panel antes/despues,
-   los 90 min de duracion, las 790 configuraciones y los dos precios
-   (89.999 ARS / 89,99 USD).
+1. Son de ejemplo y hay que confirmarlos: los numeros del panel antes/despues
+   y las 790 configuraciones. Los precios y la duracion ya los maneja el dueño
+   desde la herramienta de `EDIT/`.
 
 El servicio es 100% REMOTO: nada de la copia puede implicar tocar la maquina
 en persona (desarmar, pasta termica, retiro y entrega a domicilio).

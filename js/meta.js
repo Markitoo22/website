@@ -104,8 +104,13 @@
     /* 1. el boton tiene que llevar a algun lado. Si el link no se llego a
           armar (un error de JS antes de tiempo, un bloqueador que carga a
           medias), el click no puede terminar en una conversacion: contarlo
-          seria festejar una conversion que no existe. */
-    if ((a.getAttribute('href') || '').indexOf('wa.me/') < 0) return;
+          seria festejar una conversion que no existe.
+
+          Se mira que HAYA destino, no cual: a donde apunte el boton es
+          problema del boton. Atarlo a un dominio haria que cambiar el
+          formato del link apagara el conteo en silencio. */
+    var destino = (a.getAttribute('href') || '').trim();
+    if (!destino || destino.charAt(0) === '#') return;
 
     /* 2. clicks armados por codigo: extensiones, scripts, bots simples.
           Un element.click() da isTrusted false; el dedo da true. */

@@ -22,7 +22,7 @@ window.MLPC = {
     "precioAR": "59999",
     "precioUSD": "54.99",
     "duracion": "45",
-    "color": "#00d19d",
+    "color": "#00fffb",
     "frase": {
       "de": "Garantierte Lösung",
       "en": "Guaranteed solution",

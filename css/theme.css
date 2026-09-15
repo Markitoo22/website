@@ -74,7 +74,6 @@
   --bar-glow:      rgb(from var(--accent) r g b / .75);    /* glow de las barras */
   --claim-line:    rgb(from var(--accent) r g b / .55);    /* lineas de la frase */
   --claim-shine:   rgb(from var(--fg) r g b / .88);       /* destello de la frase */
-  --pulse:         rgb(from var(--accent) r g b / .50);    /* punto del header */
 
   /* LA UNICA EXCEPCION de toda la paleta: no sale de la marca. Un campo
      sin completar tiene que leerse como error en cualquier color de

@@ -246,6 +246,9 @@
     var valor = document.getElementById(base);
     if (!btn || !texto || !lista || !valor) return null;
 
+    var scroll = lista.querySelector('.combo__scroll');
+    var barra = lista.querySelector('.combo__barra');
+    var pulgar = barra && barra.querySelector('i');
     var opciones = lista.querySelectorAll('.combo__op');
     var yo = {};
 
@@ -265,6 +268,69 @@
 
     function abierta() { return !lista.hidden; }
 
+    /* ----------------------------------------------------------------
+       LA BARRA, DIBUJADA Y ARRASTRADA POR NOSOTROS
+
+       La nativa la maneja el compositor del navegador: mientras la
+       arrastras la pagina no recibe pointermove y el cursor propio se
+       queda clavado. Sacarla y listo tampoco iba: el que tiene la rueda
+       rota se quedaba sin forma de llegar al final de 47 paises.
+
+       Esta es un div. Los eventos son nuestros, asi que el cursor sigue
+       andando mientras se arrastra, y se puede arrastrar como siempre.
+       ---------------------------------------------------------------- */
+    function pintarBarra() {
+      if (!scroll || !barra || !pulgar) return;
+      var visible = scroll.clientHeight;
+      var total = scroll.scrollHeight;
+      if (total <= visible + 1) { barra.classList.remove('hay'); return; }
+      barra.classList.add('hay');
+      var alto = Math.max(28, Math.round(visible * visible / total));
+      var libre = visible - alto;
+      var avance = scroll.scrollTop / (total - visible);
+      pulgar.style.height = alto + 'px';
+      pulgar.style.top = Math.round(libre * avance) + 'px';
+    }
+
+    if (scroll) scroll.addEventListener('scroll', pintarBarra, { passive: true });
+
+    if (pulgar) {
+      var arrastre = null;
+      function soltar() {
+        arrastre = null;
+        barra.classList.remove('agarrada');
+      }
+      pulgar.addEventListener('pointerdown', function (e) {
+        e.preventDefault();
+        arrastre = {
+          y: e.clientY,
+          desde: scroll.scrollTop,
+          /* cuanto avanza el contenido por cada pixel del pulgar: la
+             proporcion entre lo que le sobra a cada uno */
+          razon: (scroll.scrollHeight - scroll.clientHeight) /
+                 (scroll.clientHeight - pulgar.offsetHeight)
+        };
+        barra.classList.add('agarrada');
+        try { pulgar.setPointerCapture(e.pointerId); } catch (err) { /* da igual */ }
+      });
+      pulgar.addEventListener('pointermove', function (e) {
+        if (!arrastre) return;
+        scroll.scrollTop = arrastre.desde + (e.clientY - arrastre.y) * arrastre.razon;
+      });
+      pulgar.addEventListener('pointerup', soltar);
+      pulgar.addEventListener('pointercancel', soltar);
+    }
+
+    /* tocar el riel salta a esa altura */
+    if (barra && scroll) {
+      barra.addEventListener('pointerdown', function (e) {
+        if (e.target !== barra) return;
+        var r = barra.getBoundingClientRect();
+        var donde = (e.clientY - r.top) / r.height;
+        scroll.scrollTop = donde * (scroll.scrollHeight - scroll.clientHeight);
+      });
+    }
+
     function ubicar() {
       var r = btn.getBoundingClientRect();
       var abajo = window.innerHeight - r.bottom - 16;
@@ -275,10 +341,12 @@
         lista.style.top = 'auto';
         lista.style.bottom = (window.innerHeight - r.top + 4) + 'px';
         lista.style.maxHeight = Math.min(300, r.top - 16) + 'px';
+        if (scroll) scroll.style.maxHeight = lista.style.maxHeight;
       } else {
         lista.style.bottom = 'auto';
         lista.style.top = (r.bottom + 4) + 'px';
         lista.style.maxHeight = Math.max(140, Math.min(300, abajo)) + 'px';
+        if (scroll) scroll.style.maxHeight = lista.style.maxHeight;
       }
     }
 
@@ -289,6 +357,7 @@
       btn.setAttribute('aria-expanded', 'true');
       var sel = lista.querySelector('[aria-selected="true"]') || opciones[0];
       if (sel) { sel.focus(); sel.scrollIntoView({ block: 'center' }); }
+      pintarBarra();
     }
 
     function cerrar(devolverFoco) {
@@ -357,6 +426,7 @@
     yo.cerrar = cerrar;
     yo.abierta = abierta;
     yo.lista = lista;
+    yo.scroll = scroll;
     yo.opciones = opciones;
     combos.push(yo);
     return yo;
@@ -383,7 +453,9 @@
   if (modal) {
     modal.addEventListener('scroll', function (e) {
       for (var i = 0; i < combos.length; i++) {
-        if (e.target !== combos[i].lista) combos[i].cerrar(false);
+        /* el scroll DE la lista no la cierra; el de la caja del
+           formulario si, porque el boton se movio */
+        if (e.target !== combos[i].scroll) combos[i].cerrar(false);
       }
     }, true);
   }

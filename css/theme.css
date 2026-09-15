@@ -87,7 +87,8 @@
   --realce:        rgb(from var(--fg) r g b / .075);
 
   /* barra de scroll del desplegable del pais */
-  --barra:         rgb(from var(--fg) r g b / .17);
+  --barra-fondo:   rgb(from var(--fg) r g b / .05);
+  --barra:         rgb(from var(--fg) r g b / .20);
   --barra-viva:    rgb(from var(--accent) r g b / .55);
 
   /* --- cursor propio: el punto es casi blanco (una pizca del tono de la

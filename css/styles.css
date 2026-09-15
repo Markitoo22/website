@@ -609,15 +609,49 @@ html.modal-abierto{ overflow: hidden; }
   font-family: var(--prose); font-size: .92rem; letter-spacing: 0;
   white-space: normal; line-height: 1.35;
 }
+/* LA BARRA DE SCROLL ES NUESTRA
+
+   Arrastrar una barra NATIVA lo maneja el compositor del navegador: la
+   pagina deja de recibir pointermove y el cursor propio se queda clavado
+   hasta que soltas. Es el mismo problema del <select> nativo.
+
+   Sacarla y listo no servia: el que tiene la rueda del mouse rota se
+   quedaba sin forma de llegar al final de 47 paises (las flechas y el
+   tipeo son teclado). Asi que la barra la dibujamos y la arrastramos
+   nosotros: los eventos son de la pagina, el cursor sigue andando, y se
+   puede arrastrar como siempre.
+
+   La caja de afuera no scrollea; scrollea .combo__scroll de adentro, con
+   su barra nativa escondida. */
 .combo__lista{
   position: fixed; z-index: 60;
-  overflow-y: auto; overscroll-behavior: contain;
-  padding: 5px;
+  overflow: hidden;
+  padding: 0;
   background: var(--panel); border: 1px solid var(--line); border-radius: 2px;
   box-shadow: 0 18px 44px -14px var(--veil-deep);
   animation: comboAbre .16s var(--ease);
   transform-origin: top center;
 }
+.combo__scroll{
+  max-height: inherit; overflow-y: auto; overscroll-behavior: contain;
+  padding: 5px; padding-right: 13px;          /* lugar para la barra */
+  scrollbar-width: none;                      /* Firefox */
+}
+.combo__scroll::-webkit-scrollbar{ display: none; }
+
+.combo__barra{
+  position: absolute; top: 5px; right: 4px; bottom: 5px; width: 6px;
+  border-radius: 99px; background: var(--barra-fondo);
+  opacity: 0; transition: opacity .18s var(--ease);
+}
+.combo__barra.hay{ opacity: 1; }
+.combo__barra i{
+  position: absolute; left: 0; right: 0;
+  display: block; border-radius: 99px;
+  background: var(--barra); cursor: grab;
+}
+.combo__barra i:hover{ background: var(--barra-viva); }
+.combo__barra.agarrada i{ background: var(--barra-viva); cursor: grabbing; }
 @keyframes comboAbre{
   from{ opacity: 0; translate: 0 -6px; scale: .985; }
   to  { opacity: 1; translate: 0 0;    scale: 1; }
@@ -637,29 +671,6 @@ html.modal-abierto{ overflow: hidden; }
   object-fit: cover; border-radius: 2px;
   box-shadow: 0 0 0 1px var(--line);
 }
-/* LA BARRA DE SCROLL
-
-   Ojo con mezclar: si se declaran scrollbar-width/scrollbar-color,
-   Chrome DESACTIVA los ::-webkit-scrollbar de abajo y vuelve a dibujar
-   la barra del sistema, con flechitas y todo. Por eso las propiedades
-   estandar van aparte, solo para el navegador que no tiene los
-   pseudo-elementos (Firefox). */
-.combo__lista::-webkit-scrollbar{ width: 10px; }
-.combo__lista::-webkit-scrollbar-button{ display: none; }   /* las flechitas del sistema */
-.combo__lista::-webkit-scrollbar-corner{ background: transparent; }
-.combo__lista::-webkit-scrollbar-track{ background: transparent; }
-.combo__lista::-webkit-scrollbar-thumb{
-  background-color: var(--barra);
-  border: 3px solid transparent;      /* aire a los costados del pulgar */
-  background-clip: padding-box;
-  border-radius: 99px;
-}
-.combo__lista::-webkit-scrollbar-thumb:hover{ background-color: var(--barra-viva); }
-
-@supports not selector(::-webkit-scrollbar){
-  .combo__lista{ scrollbar-width: thin; scrollbar-color: var(--barra) transparent; }
-}
-
 .combo__op{
   display: flex; align-items: center; gap: 11px;
   padding: 9px 11px; border-radius: 2px;

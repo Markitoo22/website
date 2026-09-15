@@ -76,7 +76,11 @@ html.cursor-propio, html.cursor-propio *{ cursor: none !important; }
    transicion y el punto quede arrastrandose atras del mouse.
    Lo mueve js/plexus.js, en el mismo frame que el glow. */
 .cursor{
-  position: fixed; z-index: 50; top: 0; left: 0;
+  /* EL NUMERO MAS ALTO DEL SITIO, y tiene que seguir siendolo: es lo que
+     reemplaza al cursor del sistema, asi que no puede quedar tapado por
+     nada. La escala que hay: 0 fondo · 1 contenido · 20 header ·
+     30 menu de idioma · 60 lista del pais · 90 el punto. */
+  position: fixed; z-index: 90; top: 0; left: 0;
   width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px;
   border-radius: 50%;
   background: var(--cursor-dot);
@@ -236,6 +240,11 @@ html.booting .rise{ animation: none; }
 .btn{
   display: inline-flex; align-items: center; gap: 12px;
   padding: 15px 24px; border-radius: 2px;
+  /* Hasta el formulario, .btn siempre fue un <a>. Un <button> ademas
+     trae borde, tipografia y alineacion propias del navegador: sin esto
+     aparece un contorno claro y el texto en otra fuente. */
+  border: 0; appearance: none; -webkit-appearance: none;
+  font-family: inherit; text-align: center; cursor: pointer;
   background: linear-gradient(180deg, var(--btn-top), var(--btn-bottom));
   color: var(--fg); font-weight: 600; font-size: 15px; letter-spacing: -0.01em;
   box-shadow: 0 14px 40px -18px var(--btn-shadow), inset 0 1px 0 var(--gloss);
@@ -490,6 +499,244 @@ html.booting .rise{ animation: none; }
 @keyframes rise{ from{ opacity: 0; transform: translateY(18px); } to{ opacity: 1; transform: none; } }
 .d1{ animation-delay: .05s; } .d2{ animation-delay: .16s; } .d3{ animation-delay: .3s; } .d4{ animation-delay: .42s; }
 
+/* ============ formulario de diagnostico ============ */
+/* color-scheme dark aca adentro: con eso el desplegable nativo, el
+   tilde y la barra de scroll los dibuja el sistema en oscuro, sin
+   tener que imitarlos a mano. */
+.modal{
+  color-scheme: dark;
+  width: min(430px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 0; border: 0; background: transparent;
+  overflow: visible;
+}
+.modal::backdrop{
+  background: var(--veil-deep);
+  backdrop-filter: blur(4px);
+}
+/* Un <dialog> NO hereda el user-select del body: se dibuja en la top
+   layer y el navegador le pone "text" por su cuenta. Sin esto, adentro
+   del formulario se podia seleccionar todo, en contra de la regla del
+   sitio. La excepcion sigue siendo la misma: los campos de escribir. */
+.modal, .modal *{ -webkit-user-select: none; user-select: none; }
+.modal input, .modal textarea{ -webkit-user-select: text; user-select: text; }
+
+.modal__caja{
+  position: relative;
+  outline: none;   /* recibe el foco al abrir, pero no dibuja el aro */
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  padding: clamp(24px, 5vw, 34px);
+  background: linear-gradient(180deg, var(--panel), var(--ink-2));
+  border: 1px solid var(--line);
+}
+html.modal-abierto{ overflow: hidden; }
+
+.modal__x{
+  position: absolute; top: 12px; right: 12px;
+  width: 32px; height: 32px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: 1px solid transparent;
+  color: var(--muted); cursor: pointer;
+}
+.modal__x:hover{ color: var(--fg); border-color: var(--line); }
+
+.modal__h{
+  margin: 0 34px 6px 0;
+  font-family: var(--tech); font-size: clamp(1.25rem, 4.6vw, 1.5rem);
+  font-weight: 700; text-transform: uppercase; letter-spacing: -0.01em;
+  color: var(--fg); text-wrap: balance;
+}
+.modal__sub{
+  margin: 0 0 22px; font-size: .88rem; color: var(--muted);
+  /* sin esto queda "dia." solo en el ultimo renglon */
+  text-wrap: balance;
+}
+
+.campo{ display: block; margin-bottom: 15px; }
+.campo__l{
+  display: block; margin-bottom: 6px;
+  font-family: var(--tech); font-size: 10.5px; font-weight: 400;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--muted);
+}
+.campo__c{
+  width: 100%; padding: 12px 13px;
+  background: var(--ink); border: 1px solid var(--line); border-radius: 2px;
+  color: var(--fg); font-family: var(--prose); font-size: 1rem;
+  outline: none; transition: border-color .2s var(--ease);
+}
+.campo__c:focus{ border-color: var(--accent); }
+
+/* ---- telefono: pais + numero, EN LA MISMA FILA ----
+   El pais es angosto y se queda con lo que necesita; el numero se lleva
+   todo el resto. El eco de abajo repite el numero entero ya armado, que
+   es lo que confirma que se entendio bien. */
+.dupla{ display: flex; align-items: stretch; gap: 7px; }
+.dupla .campo__c{ width: auto; }
+/* ---- el desplegable del pais, hecho en la pagina ----
+   No es un <select>: el nativo abre una ventana del sistema donde el
+   cursor propio no puede entrar. Ver js/formulario.js. */
+.combo{ flex: none; position: relative; }
+#fPaisTexto{ display: flex; align-items: center; gap: 11px; }
+.combo__boton{
+  display: flex; align-items: center; gap: 12px;
+  padding-left: 13px; padding-right: 13px;
+  font-family: var(--tech); font-size: .95rem; letter-spacing: .02em;
+  color: var(--fg); text-align: left; cursor: pointer;
+}
+.combo__flecha{
+  flex: none; color: var(--muted);
+  transition: rotate .22s var(--ease), color .22s var(--ease);
+}
+.combo__boton:hover .combo__flecha{ color: var(--fg-2); }
+.combo__boton[aria-expanded="true"]{ border-color: var(--accent); }
+.combo__boton[aria-expanded="true"] .combo__flecha{ rotate: 180deg; color: var(--accent); }
+
+/* El desplegable del problema ocupa todo el ancho; el del pais se queda
+   con lo justo. Y sus opciones son frases, no codigos: van en la
+   tipografia de lectura — en la tecnica los parentesis de "(pocos FPS)"
+   parecen corchetes. */
+.combo--ancho{ display: block; width: 100%; }
+.combo--ancho .combo__boton{
+  width: 100%; justify-content: space-between;
+  font-family: var(--prose); font-size: 1rem; letter-spacing: 0;
+}
+.combo--ancho .combo__op{
+  font-family: var(--prose); font-size: .92rem; letter-spacing: 0;
+  white-space: normal; line-height: 1.35;
+}
+.combo__lista{
+  position: fixed; z-index: 60;
+  overflow-y: auto; overscroll-behavior: contain;
+  padding: 5px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 2px;
+  box-shadow: 0 18px 44px -14px var(--veil-deep);
+  animation: comboAbre .16s var(--ease);
+  transform-origin: top center;
+}
+@keyframes comboAbre{
+  from{ opacity: 0; translate: 0 -6px; scale: .985; }
+  to  { opacity: 1; translate: 0 0;    scale: 1; }
+}
+/* Las banderas son PNG propios, en static/banderas/, y no emoji: Windows
+   no dibuja banderas y ahi salian las dos letras del pais. Son 47
+   archivos de 16 KB en total, y cargan recien cuando se abre la lista.
+   El alt lleva las letras, asi que si una no carga se lee igual.
+
+   Caja fija y object-fit cover: las banderas no tienen todas la misma
+   proporcion (US es 1,9:1 y BR 1,43:1) y sin esto los codigos quedaban
+   desalineados. El contorno separa del fondo a las que tienen blanco o
+   negro en el borde. */
+.combo__bandera{
+  flex: none;
+  width: 22px; height: 15px;
+  object-fit: cover; border-radius: 2px;
+  box-shadow: 0 0 0 1px var(--line);
+}
+/* LA BARRA DE SCROLL
+
+   Ojo con mezclar: si se declaran scrollbar-width/scrollbar-color,
+   Chrome DESACTIVA los ::-webkit-scrollbar de abajo y vuelve a dibujar
+   la barra del sistema, con flechitas y todo. Por eso las propiedades
+   estandar van aparte, solo para el navegador que no tiene los
+   pseudo-elementos (Firefox). */
+.combo__lista::-webkit-scrollbar{ width: 10px; }
+.combo__lista::-webkit-scrollbar-button{ display: none; }   /* las flechitas del sistema */
+.combo__lista::-webkit-scrollbar-corner{ background: transparent; }
+.combo__lista::-webkit-scrollbar-track{ background: transparent; }
+.combo__lista::-webkit-scrollbar-thumb{
+  background-color: var(--barra);
+  border: 3px solid transparent;      /* aire a los costados del pulgar */
+  background-clip: padding-box;
+  border-radius: 99px;
+}
+.combo__lista::-webkit-scrollbar-thumb:hover{ background-color: var(--barra-viva); }
+
+@supports not selector(::-webkit-scrollbar){
+  .combo__lista{ scrollbar-width: thin; scrollbar-color: var(--barra) transparent; }
+}
+
+.combo__op{
+  display: flex; align-items: center; gap: 11px;
+  padding: 9px 11px; border-radius: 2px;
+  font-family: var(--tech); font-size: .9rem; letter-spacing: .02em;
+  color: var(--fg-2); cursor: pointer; white-space: nowrap;
+}
+.combo__op:hover{ background: var(--realce); color: var(--fg); }
+.combo__op:focus{ outline: none; background: var(--realce); color: var(--fg); }
+.combo__op[aria-selected="true"]{
+  background: rgb(from var(--accent) r g b / .13); color: var(--fg);
+}
+.combo__op:focus-visible{ outline: 2px solid var(--accent); outline-offset: -2px; }
+.dupla input.campo__c{ flex: 1 1 auto; min-width: 0; }
+.campo .eco{
+  display: block; margin-top: 5px; min-height: 1.1em;
+  font-family: var(--tech); font-size: 12px; letter-spacing: .06em;
+  color: var(--muted);
+}
+.campo .eco--ok{ color: var(--accent); }
+.campo .eco--ok::before{ content: '✓ '; }
+.campo.mal .campo__c{ border-color: var(--mal); }
+/* ---- opciones como etiquetas, no como desplegable ----
+   El recuadro lo dibuja el <span>, no el <label>: asi el estado
+   "elegido" sale con input:checked + span, que anda en cualquier
+   navegador. Con :has() en el label se veria mejor escrito, pero en uno
+   viejo no se notaria cual esta elegido, y eso no es decoracion: es el
+   dato. */
+.opciones{ border: 0; padding: 0; margin: 0 0 15px; min-width: 0; }
+.opciones legend{ padding: 0; }
+.pills{ display: flex; flex-wrap: wrap; gap: 7px; }
+.pill{ display: inline-flex; position: relative; cursor: pointer; }
+.pill input{
+  position: absolute; width: 1px; height: 1px; margin: 0;
+  opacity: 0; pointer-events: none;
+}
+.pill span{
+  display: inline-block; padding: 9px 13px;
+  background: var(--ink); border: 1px solid var(--line); border-radius: 2px;
+  color: var(--fg-2); font-size: .85rem; line-height: 1.25;
+  transition: border-color .18s var(--ease), color .18s var(--ease),
+              background-color .18s var(--ease);
+}
+.pill:hover span{ border-color: var(--gloss); color: var(--fg); }
+.pill input:checked + span{
+  border-color: var(--accent);
+  background-color: rgb(from var(--accent) r g b / .13);
+  color: var(--fg);
+}
+.pill input:focus-visible + span{ outline: 2px solid var(--accent); outline-offset: 2px; }
+.opciones.mal .pill span{ border-color: var(--mal); }
+
+.acuerdo{
+  display: flex; gap: 11px; align-items: flex-start;
+  margin: 18px 0 16px; cursor: pointer;
+  font-size: .79rem; line-height: 1.45; color: var(--muted);
+}
+.acuerdo input{
+  flex: none; width: 17px; height: 17px; margin: 1px 0 0;
+  accent-color: var(--accent); cursor: pointer;
+}
+.acuerdo.mal{ color: var(--mal); }
+
+.modal__err{
+  margin: 0 0 12px;
+  font-family: var(--tech); font-size: 11px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--mal);
+}
+.modal__enviar{ width: 100%; justify-content: center; }
+
+/* el punto del cursor propio crece sobre los campos, como sobre los
+   botones: sin puntero del sistema, es la unica pista de que se toca */
+html:has(.campo__c:hover, .acuerdo:hover, .pill:hover, .combo__op:hover) .cursor{ scale: 1.8; }
+
+@media (max-width: 620px){
+  .modal{ width: calc(100vw - 20px); }
+  .modal__caja{ padding: 22px 18px 24px; }
+}
+@media (prefers-reduced-motion: reduce){
+  .campo__c{ transition: none; }
+}
+
 /* ============ responsive ============ */
 @media (max-width: 860px){
   .steps{ grid-template-columns: repeat(2, minmax(0,1fr)); }
@@ -540,6 +787,8 @@ html.booting .rise{ animation: none; }
   .scanlines{ display: none; }     /* al 2,2% de opacidad no se ve en un celular */
 }
 @media (prefers-reduced-motion: reduce){
+  .combo__lista{ animation: none; }
+  .combo__flecha{ transition: none; }
   .claim{ animation: none; --claim-x: -45vw; }
   html{ scroll-behavior: auto; }
   *{ animation-duration: .001s !important; animation-delay: 0s !important; transition-duration: .001s !important; }

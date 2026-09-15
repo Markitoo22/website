@@ -76,6 +76,20 @@
   --claim-shine:   rgb(from var(--fg) r g b / .88);       /* destello de la frase */
   --pulse:         rgb(from var(--accent) r g b / .50);    /* punto del header */
 
+  /* LA UNICA EXCEPCION de toda la paleta: no sale de la marca. Un campo
+     sin completar tiene que leerse como error en cualquier color de
+     marca que se elija, incluso si el dueño pone un verde o un rojo. */
+  --mal:           hsl(2 72% 62%);
+
+  /* la opcion del desplegable bajo el mouse: se ACLARA, no se oscurece.
+     El --ink que se usaba es mas oscuro que el fondo de la lista y
+     parecia que la opcion se apagaba en vez de encenderse. */
+  --realce:        rgb(from var(--fg) r g b / .075);
+
+  /* barra de scroll del desplegable del pais */
+  --barra:         rgb(from var(--fg) r g b / .17);
+  --barra-viva:    rgb(from var(--accent) r g b / .55);
+
   /* --- cursor propio: el punto es casi blanco (una pizca del tono de la
          marca, para que no sea un blanco ajeno al sitio) y el halo es el
          color canonico en dos capas --- */

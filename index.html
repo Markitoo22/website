@@ -31,6 +31,19 @@
      Los eventos de los botones los manda js/meta.js.
      ================================================================== -->
 <script>window.MLPC_PIXEL = '1124671366336545';</script>
+<!-- A DONDE SE GUARDAN LOS DATOS DEL FORMULARIO.
+     Es un formulario de Google: cada envio cae en una planilla.
+     Como se completa esto esta explicado en README.md.
+     Si queda vacio el formulario sigue funcionando igual, pero NO se
+     guarda nada: solo se arma el mensaje de WhatsApp. -->
+<script>window.MLPC_FORM = {
+  url: 'https://docs.google.com/forms/d/e/1FAIpQLSfWoMQQs4pXQcxx97nok7RZ6DDKAkkDj5h9MrehimYbypL6ow/formResponse',
+  nombre:   'entry.451107416',
+  tel:      'entry.507607860',
+  pc:       'entry.426096353',
+  problema: 'entry.1373985069',
+  idioma:   'entry.847185577'
+};</script>
 <script>
   if (window.MLPC_PIXEL) {
     !function(f,b,e,v,n,t,s)
@@ -50,14 +63,14 @@
      asi WhatsApp anda aunque el JavaScript no llegue a correr.
      Va aca arriba y sin defer porque el color de marca tiene que estar
      puesto antes del primer pintado. -->
-<script src="config_editor.js?v=20260913a"></script>
+<script src="config_editor.js?v=20260915a"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Quantico:wght@400;700&display=swap">
 <!-- ?v= corta el cache del CDN: Pages sirve con max-age=600 y cada nodo
      guarda su copia, asi que sin esto un visitante (o un celular en 4G,
      que sale por otro nodo) puede ver hasta 10 minutos la version vieja.
      SUBIR ESTE NUMERO EN CADA DEPLOY que toque css/ o js/. -->
-<link rel="stylesheet" href="css/theme.css?v=20260913a">
-<link rel="stylesheet" href="css/styles.css?v=20260913a">
+<link rel="stylesheet" href="css/theme.css?v=20260915a">
+<link rel="stylesheet" href="css/styles.css?v=20260915a">
 </head>
 <body>
 <canvas id="plexus" aria-hidden="true"></canvas>
@@ -215,13 +228,186 @@
   </footer>
 </div>
 
-<script src="js/i18n.js?v=20260913a"></script>
-<script src="js/plexus.js?v=20260913a"></script>
-<script src="js/drag.js?v=20260913a"></script>
-<!-- Solo telefonos: intenta abrir WhatsApp por whatsapp:// para
-     saltear el cartel del navegador interno de Meta. Si no funciona,
-     sigue por el href de siempre. Se saca borrando esta linea. -->
-<script src="js/whatsapp.js?v=20260913a"></script>
-<script src="js/meta.js?v=20260913a"></script>
+<!-- FORMULARIO DE DIAGNOSTICO
+     Lo abre js/formulario.js cuando se toca cualquier boton de WhatsApp.
+     Va FUERA de .wrap a proposito: la compuerta de arranque le pone
+     opacity 0 y pointer-events none a todo lo de adentro.
+
+     Sin JavaScript este dialogo nunca se abre y los botones siguen
+     llevando derecho a WhatsApp, que es como funciono siempre. -->
+<!-- El buzon: aca adentro se manda el formulario a Google. Es un
+     <form> comun apuntando a un iframe, el metodo mas viejo que hay,
+     porque es el unico que el navegador NO puede descartar. sendBeacon
+     esta pensado para disparar y olvidarse mientras la pagina se va, y
+     el navegador tiene derecho a tirarlo; justamente lo que pasaba. -->
+<iframe name="buzon" id="buzon" title="envio" tabindex="-1" aria-hidden="true"
+        style="position:absolute;width:0;height:0;border:0;left:-9999px"></iframe>
+
+<dialog class="modal" id="modal" aria-labelledby="fTitulo">
+  <form class="modal__caja" id="form" tabindex="-1" novalidate>
+    <button type="button" class="modal__x" id="fCerrar" data-i18n-attr="aria-label:f_cerrar" aria-label="Cerrar">
+      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><path d="M2 2l11 11M13 2L2 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </button>
+
+    <h2 class="modal__h" id="fTitulo" data-i18n="f_title">Reservá tu diagnóstico gratis</h2>
+    <p class="modal__sub" data-i18n="f_sub">Son 30 segundos. Te respondo por WhatsApp el mismo día.</p>
+
+    <label class="campo">
+      <span class="campo__l" data-i18n="f_nombre">Nombre</span>
+      <input class="campo__c" type="text" id="fNombre" name="nombre" autocomplete="name"
+             maxlength="40" data-i18n-attr="placeholder:f_nombre_ph" placeholder="Tu nombre">
+    </label>
+
+    <!-- El prefijo fijo, la ayuda y el eco de abajo los pone
+         js/formulario.js segun el pais: a un argentino le muestra
+         "+54 9" y le saca solos el 0 y el 15; al resto le pide el codigo
+         de pais. El eco repite el numero completo ya armado, para que no
+         quede ninguna duda de que se entendio bien. -->
+    <!-- El codigo de pais arranca en el que dice la IP, pero SE PUEDE
+         CAMBIAR: un colombiano de visita en Argentina tiene numero de
+         Colombia, y con un prefijo fijo quedaba atrapado sin poder
+         escribir el suyo.
+         El eco de abajo repite el numero entero ya armado: es lo que
+         saca de encima la duda del 0, el 15 y el +54. -->
+    <div class="campo" id="campoTel">
+      <label class="campo__l" for="fTel" data-i18n="f_tel">Número de WhatsApp</label>
+      <div class="dupla">
+        <!-- Desplegable propio y no un <select>: el nativo abre una
+             ventana del SISTEMA, donde nuestro cursor no puede seguir al
+             mouse ni dibujarse encima. Siendo contenido de la pagina,
+             todo sigue funcionando igual que en el resto del sitio, y
+             ademas se puede tipear para saltar al pais. -->
+        <div class="combo" id="combo">
+          <button type="button" class="campo__c combo__boton" id="fPaisBtn"
+                  aria-haspopup="listbox" aria-expanded="false" aria-controls="fPaisLista"
+                  data-i18n-attr="aria-label:f_pais" aria-label="País">
+            <span id="fPaisTexto"><img class="combo__bandera" src="static/banderas/ar.png" alt="AR" width="22" height="15" loading="lazy" decoding="async">+54</span>
+            <svg class="combo__flecha" width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="combo__lista" id="fPaisLista" role="listbox" hidden>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="54" data-pais="AR" aria-selected="true"><img class="combo__bandera" src="static/banderas/ar.png" alt="AR" width="22" height="15" loading="lazy" decoding="async">+54</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="591" data-pais="BO" aria-selected="false"><img class="combo__bandera" src="static/banderas/bo.png" alt="BO" width="22" height="15" loading="lazy" decoding="async">+591</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="55" data-pais="BR" aria-selected="false"><img class="combo__bandera" src="static/banderas/br.png" alt="BR" width="22" height="15" loading="lazy" decoding="async">+55</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="1" data-pais="CA" aria-selected="false"><img class="combo__bandera" src="static/banderas/ca.png" alt="CA" width="22" height="15" loading="lazy" decoding="async">+1</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="56" data-pais="CL" aria-selected="false"><img class="combo__bandera" src="static/banderas/cl.png" alt="CL" width="22" height="15" loading="lazy" decoding="async">+56</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="57" data-pais="CO" aria-selected="false"><img class="combo__bandera" src="static/banderas/co.png" alt="CO" width="22" height="15" loading="lazy" decoding="async">+57</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="506" data-pais="CR" aria-selected="false"><img class="combo__bandera" src="static/banderas/cr.png" alt="CR" width="22" height="15" loading="lazy" decoding="async">+506</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="53" data-pais="CU" aria-selected="false"><img class="combo__bandera" src="static/banderas/cu.png" alt="CU" width="22" height="15" loading="lazy" decoding="async">+53</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="1" data-pais="DO" aria-selected="false"><img class="combo__bandera" src="static/banderas/do.png" alt="DO" width="22" height="15" loading="lazy" decoding="async">+1</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="593" data-pais="EC" aria-selected="false"><img class="combo__bandera" src="static/banderas/ec.png" alt="EC" width="22" height="15" loading="lazy" decoding="async">+593</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="503" data-pais="SV" aria-selected="false"><img class="combo__bandera" src="static/banderas/sv.png" alt="SV" width="22" height="15" loading="lazy" decoding="async">+503</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="502" data-pais="GT" aria-selected="false"><img class="combo__bandera" src="static/banderas/gt.png" alt="GT" width="22" height="15" loading="lazy" decoding="async">+502</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="504" data-pais="HN" aria-selected="false"><img class="combo__bandera" src="static/banderas/hn.png" alt="HN" width="22" height="15" loading="lazy" decoding="async">+504</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="52" data-pais="MX" aria-selected="false"><img class="combo__bandera" src="static/banderas/mx.png" alt="MX" width="22" height="15" loading="lazy" decoding="async">+52</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="505" data-pais="NI" aria-selected="false"><img class="combo__bandera" src="static/banderas/ni.png" alt="NI" width="22" height="15" loading="lazy" decoding="async">+505</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="507" data-pais="PA" aria-selected="false"><img class="combo__bandera" src="static/banderas/pa.png" alt="PA" width="22" height="15" loading="lazy" decoding="async">+507</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="595" data-pais="PY" aria-selected="false"><img class="combo__bandera" src="static/banderas/py.png" alt="PY" width="22" height="15" loading="lazy" decoding="async">+595</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="51" data-pais="PE" aria-selected="false"><img class="combo__bandera" src="static/banderas/pe.png" alt="PE" width="22" height="15" loading="lazy" decoding="async">+51</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="1" data-pais="PR" aria-selected="false"><img class="combo__bandera" src="static/banderas/pr.png" alt="PR" width="22" height="15" loading="lazy" decoding="async">+1</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="598" data-pais="UY" aria-selected="false"><img class="combo__bandera" src="static/banderas/uy.png" alt="UY" width="22" height="15" loading="lazy" decoding="async">+598</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="58" data-pais="VE" aria-selected="false"><img class="combo__bandera" src="static/banderas/ve.png" alt="VE" width="22" height="15" loading="lazy" decoding="async">+58</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="1" data-pais="US" aria-selected="false"><img class="combo__bandera" src="static/banderas/us.png" alt="US" width="22" height="15" loading="lazy" decoding="async">+1</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="34" data-pais="ES" aria-selected="false"><img class="combo__bandera" src="static/banderas/es.png" alt="ES" width="22" height="15" loading="lazy" decoding="async">+34</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="351" data-pais="PT" aria-selected="false"><img class="combo__bandera" src="static/banderas/pt.png" alt="PT" width="22" height="15" loading="lazy" decoding="async">+351</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="39" data-pais="IT" aria-selected="false"><img class="combo__bandera" src="static/banderas/it.png" alt="IT" width="22" height="15" loading="lazy" decoding="async">+39</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="33" data-pais="FR" aria-selected="false"><img class="combo__bandera" src="static/banderas/fr.png" alt="FR" width="22" height="15" loading="lazy" decoding="async">+33</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="49" data-pais="DE" aria-selected="false"><img class="combo__bandera" src="static/banderas/de.png" alt="DE" width="22" height="15" loading="lazy" decoding="async">+49</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="44" data-pais="GB" aria-selected="false"><img class="combo__bandera" src="static/banderas/gb.png" alt="GB" width="22" height="15" loading="lazy" decoding="async">+44</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="353" data-pais="IE" aria-selected="false"><img class="combo__bandera" src="static/banderas/ie.png" alt="IE" width="22" height="15" loading="lazy" decoding="async">+353</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="31" data-pais="NL" aria-selected="false"><img class="combo__bandera" src="static/banderas/nl.png" alt="NL" width="22" height="15" loading="lazy" decoding="async">+31</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="32" data-pais="BE" aria-selected="false"><img class="combo__bandera" src="static/banderas/be.png" alt="BE" width="22" height="15" loading="lazy" decoding="async">+32</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="41" data-pais="CH" aria-selected="false"><img class="combo__bandera" src="static/banderas/ch.png" alt="CH" width="22" height="15" loading="lazy" decoding="async">+41</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="43" data-pais="AT" aria-selected="false"><img class="combo__bandera" src="static/banderas/at.png" alt="AT" width="22" height="15" loading="lazy" decoding="async">+43</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="46" data-pais="SE" aria-selected="false"><img class="combo__bandera" src="static/banderas/se.png" alt="SE" width="22" height="15" loading="lazy" decoding="async">+46</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="47" data-pais="NO" aria-selected="false"><img class="combo__bandera" src="static/banderas/no.png" alt="NO" width="22" height="15" loading="lazy" decoding="async">+47</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="45" data-pais="DK" aria-selected="false"><img class="combo__bandera" src="static/banderas/dk.png" alt="DK" width="22" height="15" loading="lazy" decoding="async">+45</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="48" data-pais="PL" aria-selected="false"><img class="combo__bandera" src="static/banderas/pl.png" alt="PL" width="22" height="15" loading="lazy" decoding="async">+48</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="7" data-pais="RU" aria-selected="false"><img class="combo__bandera" src="static/banderas/ru.png" alt="RU" width="22" height="15" loading="lazy" decoding="async">+7</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="90" data-pais="TR" aria-selected="false"><img class="combo__bandera" src="static/banderas/tr.png" alt="TR" width="22" height="15" loading="lazy" decoding="async">+90</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="972" data-pais="IL" aria-selected="false"><img class="combo__bandera" src="static/banderas/il.png" alt="IL" width="22" height="15" loading="lazy" decoding="async">+972</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="971" data-pais="AE" aria-selected="false"><img class="combo__bandera" src="static/banderas/ae.png" alt="AE" width="22" height="15" loading="lazy" decoding="async">+971</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="27" data-pais="ZA" aria-selected="false"><img class="combo__bandera" src="static/banderas/za.png" alt="ZA" width="22" height="15" loading="lazy" decoding="async">+27</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="61" data-pais="AU" aria-selected="false"><img class="combo__bandera" src="static/banderas/au.png" alt="AU" width="22" height="15" loading="lazy" decoding="async">+61</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="64" data-pais="NZ" aria-selected="false"><img class="combo__bandera" src="static/banderas/nz.png" alt="NZ" width="22" height="15" loading="lazy" decoding="async">+64</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="81" data-pais="JP" aria-selected="false"><img class="combo__bandera" src="static/banderas/jp.png" alt="JP" width="22" height="15" loading="lazy" decoding="async">+81</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="86" data-pais="CN" aria-selected="false"><img class="combo__bandera" src="static/banderas/cn.png" alt="CN" width="22" height="15" loading="lazy" decoding="async">+86</div>
+            <div class="combo__op" role="option" tabindex="-1" data-cod="91" data-pais="IN" aria-selected="false"><img class="combo__bandera" src="static/banderas/in.png" alt="IN" width="22" height="15" loading="lazy" decoding="async">+91</div>
+          </div>
+        </div>
+        <input type="hidden" id="fPais" value="54">
+        <input class="campo__c" type="tel" id="fTel" name="tel" autocomplete="tel"
+               inputmode="numeric" maxlength="20"
+               data-i18n-attr="placeholder:f_tel_ph" placeholder="11 2345-6789">
+      </div>
+      <span class="eco" id="fTelEco" aria-live="polite"></span>
+    </div>
+
+    <!-- Etiquetas y no desplegables A PROPOSITO. Un <select> abre una
+         ventana del SISTEMA, fuera de la pagina: ahi el cursor propio no
+         puede seguir al mouse ni dibujarse encima, y en el celular tapa
+         media pantalla. Asi ademas se elige de un toque en vez de dos y
+         se leen todas las opciones sin abrir nada, que en este
+         formulario es parte del argumento.
+         Por dentro siguen siendo radios nativos: teclado y lectores de
+         pantalla funcionan sin agregar nada. -->
+    <fieldset class="campo opciones" id="grupoPc">
+      <legend class="campo__l" data-i18n="f_pc">¿Qué tipo de PC tenés?</legend>
+      <div class="pills">
+        <label class="pill"><input type="radio" name="pc" value="pc1"><span data-i18n="f_pc1">Notebook</span></label>
+        <label class="pill"><input type="radio" name="pc" value="pc2"><span data-i18n="f_pc2">PC de escritorio</span></label>
+      </div>
+    </fieldset>
+
+    <!-- Ocho opciones: desplegable. El mismo componente que el del
+         codigo de pais, hecho en la pagina y no un <select> nativo. -->
+    <div class="campo" id="campoProb">
+      <label class="campo__l" data-i18n="f_prob">¿Cuál es el problema principal?</label>
+      <div class="combo combo--ancho" id="comboProb">
+        <button type="button" class="campo__c combo__boton" id="fProbBtn"
+                aria-haspopup="listbox" aria-expanded="false" aria-controls="fProbLista">
+          <span id="fProbTexto" data-i18n="f_elegi">Elegí una opción</span>
+          <svg class="combo__flecha" width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="combo__lista" id="fProbLista" role="listbox" hidden>
+          <div class="combo__op" role="option" tabindex="-1" data-cod="p1" aria-selected="false" data-i18n="f_p1">opcion 1</div>
+          <div class="combo__op" role="option" tabindex="-1" data-cod="p2" aria-selected="false" data-i18n="f_p2">opcion 2</div>
+          <div class="combo__op" role="option" tabindex="-1" data-cod="p3" aria-selected="false" data-i18n="f_p3">opcion 3</div>
+          <div class="combo__op" role="option" tabindex="-1" data-cod="p4" aria-selected="false" data-i18n="f_p4">opcion 4</div>
+          <div class="combo__op" role="option" tabindex="-1" data-cod="p5" aria-selected="false" data-i18n="f_p5">opcion 5</div>
+          <div class="combo__op" role="option" tabindex="-1" data-cod="p6" aria-selected="false" data-i18n="f_p6">opcion 6</div>
+          <div class="combo__op" role="option" tabindex="-1" data-cod="p7" aria-selected="false" data-i18n="f_p7">opcion 7</div>
+          <div class="combo__op" role="option" tabindex="-1" data-cod="p8" aria-selected="false" data-i18n="f_p8">opcion 8</div>
+        </div>
+      </div>
+      <input type="hidden" id="fProb" value="">
+    </div>
+
+    <label class="acuerdo">
+      <input type="checkbox" id="fOk" name="ok">
+      <span data-i18n="f_ok">Entiendo que el diagnóstico es gratuito y 100% a distancia. El precio y la duración final del servicio pueden variar según las características de mi PC, mi velocidad de internet y la complejidad de la operación.</span>
+    </label>
+
+    <p class="modal__err" id="fError" role="alert" data-i18n="f_falta" hidden>Te falta completar esto</p>
+
+    <button class="btn btn--big modal__enviar" type="submit" id="fEnviar">
+      <span data-i18n="f_enviar">Confirmar diagnóstico gratis</span>
+      <svg width="15" height="10" viewBox="0 0 15 10" fill="none" aria-hidden="true"><path d="M1 5h12M9 1l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <!-- Textos que el JS necesita YA TRADUCIDOS. Viven en el DOM y no en
+         una variable para no tener que exponer el diccionario entero: el
+         mismo mecanismo de i18n que todo lo demas los deja al dia. -->
+    <span id="fPlantilla" data-i18n="f_msg" hidden></span>
+    <span data-i18n="f_tel_eco" hidden></span>
+    <span data-i18n="f_tel_falta" hidden></span>
+  </form>
+</dialog>
+
+<script src="js/i18n.js?v=20260915a"></script>
+<script src="js/plexus.js?v=20260915a"></script>
+<script src="js/drag.js?v=20260915a"></script>
+<!-- El formulario de diagnostico: intercepta los botones y, al
+     enviarse, arma el mensaje y salta a WhatsApp. -->
+<script src="js/formulario.js?v=20260915a"></script>
+<script src="js/meta.js?v=20260915a"></script>
 </body>
 </html>

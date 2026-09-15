@@ -292,6 +292,8 @@
       if (cursor) cursor.style.opacity = '0';
     });
 
+
+
     /* boton apretado = atraccion. Conviven con el arrastre de la pagina:
        agarras, la moves, y mientras el campo se junta hacia el cursor. */
     window.addEventListener('pointerdown', function (e) {

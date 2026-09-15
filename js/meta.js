@@ -5,23 +5,21 @@
    (window.MLPC_PIXEL). Si esta vacio no pasa nada: ni script de Meta,
    ni cookies, ni este archivo hace nada.
 
-   Se mide un solo hecho: el click en cualquier boton de WhatsApp.
-   Sobre ese mismo click se mandan DOS eventos estandar, que es lo que
-   Meta muestra con estos nombres:
+   Aca se mide UN solo hecho: el click en un boton de WhatsApp, que es
+   el que abre el formulario. Va como Contact ("Contactar" en Ads
+   Manager) y significa intencion, nada mas.
 
-     Contact  ->  "Contactar"
-     Lead     ->  "Cliente potencial"
+   EL "CLIENTE POTENCIAL" (Lead) YA NO SE DISPARA ACA. Lo manda
+   js/formulario.js cuando alguien completa y envia el formulario, que
+   es cuando dejo nombre y telefono de verdad. La diferencia importa:
+   antes Meta aprendia de gente que toca botones, ahora aprende de
+   gente que deja datos.
 
-   OJO: es el MISMO click contado dos veces. En Ads Manager hay que
-   elegir UNO como evento de conversion (Lead) y leer el otro como
-   dato. Sumarlos da el doble de lo que paso de verdad. Meta ademas
-   registra por su cuenta un SubscribedButtonClick en el mismo click:
-   son tres renglones para una sola persona apretando un boton.
+   Los dos numeros juntos son el embudo: cuantos abrieron el formulario
+   (Contact) contra cuantos lo completaron (Lead).
 
-   Y lo que mide es la INTENCION (abrio WhatsApp), no la conversacion:
-   lo que se hable adentro de WhatsApp, desde la web no se ve. Que el
-   numero de clicks sea bastante mayor al de chats recibidos es lo
-   normal, no una falla.
+   Meta ademas registra por su cuenta un SubscribedButtonClick en el
+   mismo click; no es nuestro y no hay que sumarlo.
 
    ------------------------------------------------------------------
    POR QUE HAY FILTROS
@@ -136,11 +134,9 @@
     ultimo = ahora;
     ultimoDonde = donde;
 
-    var datos = {
+    window.fbq('track', 'Contact', {
       content_name: donde,                                   /* que boton toco */
       content_category: document.documentElement.lang || ''  /* en que idioma leyo */
-    };
-    window.fbq('track', 'Contact', datos);
-    window.fbq('track', 'Lead', datos);
+    });
   });
 })();

@@ -173,6 +173,165 @@ WhatsApp le sale en ingles.
   `COUNTRY`, su nombre en `NAMES` y (opcional) sus zonas en `ZONES`.
 - Sacar uno: borrarlo de `LANGS`.
 
+## Formulario de diagnostico
+
+Tocar un boton de WhatsApp ya no lleva al chat: abre un formulario corto
+(`<dialog>` en `index.html`, logica en `js/formulario.js`).
+
+El motivo no es tecnico. De cada diez que tocaban el boton, nueve no
+escribian nunca, y de esos nueve no quedaba ni el nombre: plata gastada
+en traer gente de la que despues no se sabe nada.
+
+### Solo se guarda al que NO llego a WhatsApp
+
+La planilla no es un registro de todos: es una lista de pendientes. Si la
+persona llega a WhatsApp ya esta en contacto, y anotarla seria ruido
+(y que le escriban despues, raro). Lo que sirve es la otra lista: los que
+completaron el formulario y se quedaron en el camino — por el cartel del
+navegador de Instagram, porque no tienen WhatsApp instalado, o porque
+algo fallo.
+
+Como se distingue: al saltar a WhatsApp la pagina pasa a segundo plano
+(la app se pone adelante) o directamente se va. Si a los 15 segundos
+seguimos ahi Y a la vista, no llego.
+
+Se escuchan `visibilitychange` y `pagehide`, y NO `blur`: la ventana
+pierde el foco por mil motivos y ahi daríamos por llegado a alguien que
+no llego. Un falso negativo es un cliente perdido; un falso positivo es
+una consulta de mas.
+
+Por eso el pixel y la planilla miden cosas distintas a proposito: el
+pixel cuenta a TODOS los que completan el formulario (para Meta esa
+persona convirtio), la planilla solo a los que se trabaron.
+
+Cambia tambien que mide el pixel:
+
+| Evento | Cuando | Significa |
+|---|---|---|
+| `Contact` | al tocar un boton | abrio el formulario |
+| `Lead` | al enviarlo | dejo nombre y telefono |
+
+Antes los dos salian del mismo click. Con esto, Meta deja de buscar
+gente que toca botones y empieza a buscar gente que deja datos, y los
+dos numeros juntos arman el embudo.
+
+**Si algo falla, la pagina sigue andando.** El dialogo se abre solo si el
+navegador lo soporta y si `js/formulario.js` cargo. Si no, los botones
+conservan su `href` y llevan a WhatsApp como siempre.
+
+### El cursor propio y la top layer
+
+Un `<dialog>` abierto con `showModal()` se dibuja en la *top layer*, que
+esta por encima de todo el `z-index`: no hay numero que le gane. Como el
+sitio apaga el cursor del sistema y dibuja el suyo, el punto quedaba
+tapado y no se veia con que apuntar. Por eso `js/formulario.js` muda
+`#cursor` y `#glow` adentro del dialogo mientras esta abierto y los
+devuelve al `body` al cerrar. Son `position: fixed`, asi que las
+coordenadas no cambian.
+
+### Ningun <select> nativo en todo el sitio
+
+Ni las preguntas de opciones ni el codigo de pais usan `<select>`, y es a
+proposito.
+
+Un desplegable nativo abre una ventana del SISTEMA, fuera de la pagina.
+Mientras esta abierta la pagina no recibe eventos del mouse, asi que el
+cursor propio se queda clavado; y encima no se puede dibujar nada arriba
+de esa ventana, porque ningun z-index ni top layer alcanza a otra ventana
+del sistema operativo. Desde el navegador no hay arreglo posible: lo que
+se puede es no usar un desplegable nativo.
+
+En su lugar:
+
+- **Las dos preguntas de opciones** son grupos de radios pintados como
+  etiquetas.
+- **El codigo de pais** es una lista propia (`.combo` en `index.html`,
+  logica en `js/formulario.js`) con roles `listbox`/`option`, flechas,
+  Home/End, Escape y salto por letra tipeada. Va en `position: fixed` y
+  ubicada a mano porque la caja del formulario tiene scroll propio y ahi
+  adentro quedaria recortada.
+
+De paso mejora el formulario: se elige de un toque en vez de dos, se leen
+todas las opciones sin abrir nada (y en este formulario las opciones son
+parte del argumento), y en el celular no salta el selector gigante del
+sistema.
+
+El recuadro lo dibuja el `<span>`, no el `<label>`, para que el estado
+elegido salga con `input:checked + span` en vez de `:has()`. Con `:has()`
+quedaria mejor escrito, pero en un navegador viejo no se veria cual esta
+elegido — y eso no es decoracion, es el dato.
+
+### static/banderas/
+
+Las 47 banderas del codigo de pais son PNG propios de 80 px de ancho, 16
+KB entre todos. Bajados una sola vez de flagcdn.com, que las publica en
+dominio publico; **no hay ninguna dependencia externa en tiempo de
+ejecucion**, el sitio las sirve de su propia carpeta.
+
+No son emoji a proposito: Windows no trae glifos de banderas (decision de
+Microsoft) y en Chrome salian las dos letras del pais. El `alt` de cada
+imagen lleva justamente esas letras, asi que si una no carga se lee
+igual que antes.
+
+Cargan con `loading="lazy"`: recien cuando se abre la lista, y solo las
+que se ven. Para agregar un pais: el PNG en minuscula con su codigo ISO,
+y una linea mas en la lista de `index.html`.
+
+### A donde van los datos
+
+A un formulario de Google, que deja cada envio en una planilla. La
+configuracion vive en `index.html`, en `window.MLPC_FORM`:
+
+```js
+window.MLPC_FORM = {
+  url: 'https://docs.google.com/forms/d/e/XXXX/formResponse',
+  nombre: 'entry.111', tel: 'entry.222', pc: 'entry.333',
+  problema: 'entry.444', idioma: 'entry.555'
+};
+```
+
+Si queda vacio el formulario funciona igual, pero no se guarda nada:
+solo se arma el mensaje de WhatsApp.
+
+Se manda con un `<form>` de verdad apuntando a un iframe oculto: es una
+navegacion comun y el navegador no la puede descartar.
+
+**Antes iba con `navigator.sendBeacon` y SE PERDIAN ENVIOS.** sendBeacon
+esta hecho para disparar y olvidarse mientras la pagina se va, y el
+navegador tiene derecho a tirarlo si esta ocupado. Andaba en unas
+maquinas y en otras no, sin dar ningun error: devuelve "lo tomé" y
+despues lo descarta. Se perdia en silencio, que es lo peor que puede
+pasar.
+
+### Como se arma ese formulario de Google
+
+1. `forms.google.com` con la cuenta del dueño → **En blanco**.
+2. Cinco preguntas, TODAS de tipo **respuesta corta**: Nombre, WhatsApp,
+   Tipo de PC, Problema, Idioma y boton.
+
+   Corta y no opcion multiple porque la pagina manda el texto ya
+   traducido al idioma del visitante (`Notebook`, `Laptop`,
+   `Portatile`...) y una opcion multiple rechaza lo que no este en su
+   lista.
+3. Ninguna obligatoria: el control lo hace la web. Si Google tambien lo
+   exige y algo no coincide, rechaza el envio entero y no se entera
+   nadie.
+4. En **Configuracion**: "Recopilar direcciones de correo" DESACTIVADO y
+   "Limitar a 1 respuesta" DESACTIVADO. Ese ultimo obliga a iniciar
+   sesion en Google, y los visitantes no estan logueados.
+5. Respuestas → planilla nueva.
+6. EL AVISO POR MAIL VA EN EL FORMULARIO, NO EN LA PLANILLA. Son dos
+   sistemas distintos: el de la planilla (Herramientas → Configuracion de
+   notificaciones) manda un mail que dice "se edito el documento" y no
+   trae los datos; el del formulario (Respuestas → ⋮ → "Recibir
+   notificaciones por correo electronico de las respuestas nuevas") manda
+   uno por respuesta con el contenido adentro. Va este ultimo.
+6. Los ⋮ de arriba → **"Obtener vinculo prerrellenado"**, escribir en
+   cada campo una palabra marcadora, y del link que sale copiar que
+   `entry.N` le toco a cada uno.
+7. Cambiar el `/viewform` final del link por `/formResponse` y pegar todo
+   en `window.MLPC_FORM`.
+
 ## Pixel de Meta
 
 Sirve para que Meta optimice la campaña hacia gente que realmente toca el

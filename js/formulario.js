@@ -592,57 +592,77 @@
 
   /* ---------------- enviar ---------------- */
 
+  /* Cuelga del LINK y no del submit del formulario: cuando el
+     formulario esta completo NO se cancela el evento, asi que la
+     navegacion la hace el navegador siguiendo el link, como cualquier
+     link de la pagina.
+
+     Importa donde no se ve: el navegador interno de Instagram muestra su
+     cartel ANTES de navegar cuando la persona activa un link, o sea
+     sobre nuestra pagina. Con una navegacion por codigo se lleva la
+     pagina a wa.me y muestra el cartel alla — y ahi ya murio el reloj
+     que detecta a los que no llegan. */
+  var enviar = document.getElementById('fEnviar');
+
+  if (enviar) {
+    enviar.addEventListener('click', function (e) {
+      var d = leer();
+      if (!d) { e.preventDefault(); return; }   /* falta algo: ya quedo marcado */
+
+      /* ACA se cuenta el Cliente potencial, y en ningun otro lado: el
+         que llego hasta aca dejo nombre y telefono. */
+      if (typeof window.fbq === 'function') {
+        window.fbq('track', 'Lead', {
+          content_name: origen,
+          content_category: document.documentElement.lang || ''
+        });
+      }
+
+      /* --------------------------------------------------------------
+         SOLO SE GUARDA AL QUE NO LLEGO
+
+         Si la persona llega a WhatsApp ya esta en contacto: anotarla
+         seria ruido, y que le escriban despues, raro. Lo que sirve es la
+         otra lista: los que completaron el formulario y se quedaron en
+         el camino — por el cartel del navegador de Instagram, porque no
+         tienen WhatsApp instalado, o porque algo fallo.
+
+         Como se distingue: al saltar a WhatsApp la pagina pasa a segundo
+         plano (la app se pone adelante) o se va. Si a los 15 segundos
+         seguimos aca Y a la vista, no llego.
+
+         Los 15 segundos son para no contar como perdido al que se queda
+         leyendo el cartel antes de aceptar. Si tarda mas, se manda
+         igual: es preferible una consulta de mas a un cliente perdido.
+         -------------------------------------------------------------- */
+      var llego = false;
+      function seFue() { llego = true; }
+      /* Solo visibilitychange y pagehide. NO blur: la ventana pierde el
+         foco por mil motivos (el propio cartel, tocar la barra del
+         navegador) y ahi daríamos por llegado a alguien que no llego. Un
+         falso negativo es un cliente perdido; un falso positivo, una
+         consulta de mas. */
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) seFue();
+      });
+      window.addEventListener('pagehide', seFue);
+
+      window.setTimeout(function () {
+        if (llego || document.hidden) return;   /* esta en WhatsApp: nada que hacer */
+        guardar(d, function () {});
+      }, ESPERA_SALTO);
+
+      /* el destino se arma recien aca; el navegador lo sigue solo */
+      if (base) enviar.href = base + '?text=' + encodeURIComponent(mensaje(d));
+      else e.preventDefault();
+    });
+  }
+
+  /* Enter adentro de un campo: el navegador dispara el submit del
+     formulario, y de ahi se pasa al link para no duplicar nada. */
   form.addEventListener('submit', function (e) {
     e.preventDefault();
-
-    var d = leer();
-    if (!d) return;                      /* falta algo: ya quedo marcado */
-
-    /* ACA se cuenta el Cliente potencial, y en ningun otro lado: el que
-       llego hasta aca dejo nombre y telefono. */
-    if (typeof window.fbq === 'function') {
-      window.fbq('track', 'Lead', {
-        content_name: origen,
-        content_category: document.documentElement.lang || ''
-      });
-    }
-
-    /* ----------------------------------------------------------------
-       SOLO SE GUARDA AL QUE NO LLEGO
-
-       Si la persona llega a WhatsApp, ya esta en contacto: anotarla
-       seria ruido, y que le escriban despues, raro. Lo que sirve es la
-       otra lista: los que completaron el formulario y se quedaron en el
-       camino — por el cartel del navegador de Instagram, porque no
-       tienen WhatsApp instalado, o porque algo fallo.
-
-       Como se distingue: al saltar a WhatsApp la pagina pasa a segundo
-       plano (la app se pone adelante) o directamente se va. Si a los 15
-       segundos seguimos aca Y a la vista, no llego.
-
-       Los 15 segundos son para que no cuente como perdido el que se
-       queda leyendo el cartel de Facebook antes de aceptar. Si tarda
-       mas que eso, se manda igual: es preferible una consulta de mas a
-       un cliente perdido.
-       ---------------------------------------------------------------- */
-    var llego = false;
-    function seFue() { llego = true; }
-    /* Solo visibilitychange y pagehide. NO blur: la ventana pierde el
-       foco por mil motivos (el propio cartel de Facebook, tocar la barra
-       del navegador) y ahi daríamos por llegado a alguien que no llego.
-       Un falso negativo es un cliente perdido; un falso positivo es una
-       consulta de mas. */
-    document.addEventListener('visibilitychange', function () {
-      if (document.hidden) seFue();
-    });
-    window.addEventListener('pagehide', seFue);
-
-    window.setTimeout(function () {
-      if (llego || document.hidden) return;     /* esta en WhatsApp: nada que hacer */
-      guardar(d, function () {});
-    }, ESPERA_SALTO);
-
-    if (base) window.location.href = base + '?text=' + encodeURIComponent(mensaje(d));
+    if (enviar) enviar.click();
   });
 
   /* al corregir, se apaga la marca de error */

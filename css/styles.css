@@ -739,6 +739,12 @@ html.modal-abierto{ overflow: hidden; }
   text-transform: uppercase; color: var(--mal);
 }
 .modal__enviar{ width: 100%; justify-content: center; }
+/* El submit de verdad: existe solo para que Enter adentro de un campo
+   siga enviando. Lo que se ve y se toca es el link de arriba. */
+.solo-teclado{
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  border: 0; overflow: hidden; clip-path: inset(50%);
+}
 
 /* el punto del cursor propio crece sobre los campos, como sobre los
    botones: sin puntero del sistema, es la unica pista de que se toca */

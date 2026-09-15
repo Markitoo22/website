@@ -62,7 +62,11 @@ html.cursor-propio, html.cursor-propio *{ cursor: none !important; }
   background: repeating-linear-gradient(to bottom, var(--scan) 0 1px, transparent 1px 3px);
 }
 .cursor-glow{
-  position: fixed; z-index: 0; top: 0; left: 0;
+  /* Arriba del contenido, igual que el punto. Antes estaba en 0, o sea
+     iluminando solo el fondo: adentro del formulario quedaba encima (el
+     dialogo vive en la top layer) y en el resto de la pagina no, y se
+     notaba la diferencia. Queda debajo del punto, que es el 90. */
+  position: fixed; z-index: 80; top: 0; left: 0;
   width: 620px; height: 620px; margin: -310px 0 0 -310px;
   pointer-events: none; opacity: 0;
   background: radial-gradient(circle closest-side, var(--glow-in), var(--glow-out) 45%, transparent 70%);

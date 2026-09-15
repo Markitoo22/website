@@ -80,6 +80,70 @@
     }
   }
 
+
+  /* ------------------------------------------------------------------
+     DESPLAZAMIENTO AUTOMATICO, HECHO ACA
+
+     Apretar la rueda activa el de Windows, que dibuja su propio icono
+     anclado donde apretaste: el unico momento en que se ven dos cursores
+     a la vez. Ese icono no se puede esconder — lo dibuja el navegador, no
+     la pagina, igual que la barra de scroll o el desplegable nativo.
+
+     Asi que se cancela el nativo y se hace el mismo gesto aca: se ancla
+     donde apreto, y la pagina scrollea mas rapido cuanto mas lejos del
+     ancla esta el puntero. Se sale con otro click, con una tecla o con
+     la rueda, como el de siempre.
+
+     No se dibuja ninguna marca: lo unico que tiene que verse es nuestro
+     cursor, como en el resto de la pagina.
+     ------------------------------------------------------------------ */
+  var ZONA = 14;        /* px alrededor del ancla donde no pasa nada */
+  var VELOZ = 0.45;     /* px de scroll por frame y por px de distancia */
+  var auto = null;
+
+  function pararAuto() {
+    if (!auto) return;
+    if (auto.raf) window.cancelAnimationFrame(auto.raf);
+    root.classList.remove('autoscroll');
+    auto = null;
+  }
+
+  function pasoAuto() {
+    if (!auto) return;
+    var dy = auto.actual - auto.y;
+    var lejos = Math.abs(dy) - ZONA;
+    if (lejos > 0) {
+      /* respuesta acelerada, como la nativa: cerca del ancla se mueve
+         despacio y se puede afinar; lejos, vuela */
+      var v = (dy < 0 ? -1 : 1) * Math.pow(lejos, 1.35) * VELOZ * 0.1;
+      jumpTo(window.scrollY + v);
+    }
+    auto.raf = window.requestAnimationFrame(pasoAuto);
+  }
+
+  window.addEventListener('mousedown', function (e) {
+    if (e.button !== 1) return;
+    e.preventDefault();               /* sin esto aparece el icono del sistema */
+    if (auto) { pararAuto(); return; }  /* segundo click: se sale */
+
+    halt();                           /* corta cualquier inercia en curso */
+    auto = { y: e.clientY, actual: e.clientY, raf: 0 };
+    root.classList.add('autoscroll');
+    auto.raf = window.requestAnimationFrame(pasoAuto);
+  });
+
+  window.addEventListener('pointermove', function (e) {
+    if (auto) auto.actual = e.clientY;
+  }, { passive: true });
+
+  /* se sale igual que con el nativo */
+  window.addEventListener('wheel', pararAuto, { passive: true });
+  window.addEventListener('keydown', pararAuto);
+  window.addEventListener('blur', pararAuto);
+  window.addEventListener('mousedown', function (e) {
+    if (e.button !== 1 && auto) pararAuto();
+  });
+
   window.addEventListener('pointerup', release);
   window.addEventListener('pointercancel', release);
   window.addEventListener('blur', release);

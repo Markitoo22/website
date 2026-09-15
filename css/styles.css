@@ -71,6 +71,12 @@ html.cursor-propio, html.cursor-propio *{ cursor: none !important; }
   pointer-events: none; opacity: 0;
   background: radial-gradient(circle closest-side, var(--glow-in), var(--glow-out) 45%, transparent 70%);
   transition: opacity .5s var(--ease);
+  /* Aditivo: SUMA luz a lo que hay debajo en vez de taparlo con un velo.
+     Sobre el fondo casi negro se nota poco; sobre el texto claro y los
+     bordes es donde cambia. Las dos lineas a proposito: el que no conoce
+     plus-lighter se queda con screen, que es lo mas parecido. */
+  mix-blend-mode: screen;
+  mix-blend-mode: plus-lighter;
 }
 
 /* ---- el cursor propio ----

@@ -78,6 +78,7 @@
   function abrir() {
     marcar(null);
     prepararTel();
+    refrescarSalto();
     modal.showModal();
     mudarCursor(modal);
     document.documentElement.classList.add('modal-abierto');
@@ -488,7 +489,10 @@
   /* Solo se exige que esten completos. No se valida el formato del
      telefono: cada pais escribe el suyo distinto y rechazar un numero
      bueno cuesta mucho mas caro que recibir uno mal escrito. */
-  function leer() {
+  /* marcando: al enviar se pinta de rojo lo que falta. Al refrescar el
+     link mientras escribe, no — seria ir marcandole errores a alguien que
+     todavia esta completando. */
+  function leer(marcando) {
     var pc = elegido('pc');
     var prob = document.getElementById('fProb');
     var opProb = prob.value && document.querySelector('#fProbLista [data-cod="' + prob.value + '"]');
@@ -500,12 +504,16 @@
       pcTexto: textoDe(pc),
       probTexto: opProb ? opProb.textContent.trim() : ''
     };
-    if (!d.nombre) return marcar(campos.nombre.closest('.campo'), campos.nombre);
-    if (!telListo(digitos)) return marcar(campos.tel.closest('.campo'), campos.tel);
-    if (!pc) return marcar(grupos.pc, grupos.pc.querySelector('input'));
-    if (!opProb) return marcar(campoProb, document.getElementById('fProbBtn'));
-    if (!campos.ok.checked) return marcar(campos.ok.closest('.acuerdo'), campos.ok);
-    marcar(null);
+    function falta(caja, foco) {
+      if (marcando) marcar(caja, foco);
+      return null;
+    }
+    if (!d.nombre) return falta(campos.nombre.closest('.campo'), campos.nombre);
+    if (!telListo(digitos)) return falta(campos.tel.closest('.campo'), campos.tel);
+    if (!pc) return falta(grupos.pc, grupos.pc.querySelector('input'));
+    if (!opProb) return falta(campoProb, document.getElementById('fProbBtn'));
+    if (!campos.ok.checked) return falta(campos.ok.closest('.acuerdo'), campos.ok);
+    if (marcando) marcar(null);
     return d;
   }
 
@@ -606,7 +614,7 @@
 
   if (enviar) {
     enviar.addEventListener('click', function (e) {
-      var d = leer();
+      var d = leer(true);
       if (!d) { e.preventDefault(); return; }   /* falta algo: ya quedo marcado */
 
       /* ACA se cuenta el Cliente potencial, y en ningun otro lado: el
@@ -652,7 +660,8 @@
         guardar(d, function () {});
       }, ESPERA_SALTO);
 
-      /* el destino se arma recien aca; el navegador lo sigue solo */
+      /* el href ya venia puesto por refrescarSalto(); esto es por las
+         dudas, y para cubrir el caso de que no haya destino */
       if (base) enviar.href = base + '?text=' + encodeURIComponent(mensaje(d));
       else e.preventDefault();
     });
@@ -665,8 +674,25 @@
     if (enviar) enviar.click();
   });
 
+  /* ------------------------------------------------------------------
+     EL DESTINO, PUESTO DE ANTEMANO
+
+     El href se completa apenas el formulario esta listo, no dentro del
+     click. El navegador interno de Facebook inspecta y reescribe los
+     links del documento, asi que puede estar decidiendo si intercepta o
+     no con lo que ve de antemano — y antes del formulario, cuando el
+     boton era un link con su href escrito en el HTML, interceptaba.
+     ------------------------------------------------------------------ */
+  function refrescarSalto() {
+    if (!enviar) return;
+    var d = leer(false);
+    enviar.href = (d && base) ? base + '?text=' + encodeURIComponent(mensaje(d)) : '#';
+  }
+
   /* al corregir, se apaga la marca de error */
   form.addEventListener('input', function () {
     if (error && !error.hidden) marcar(null);
+    refrescarSalto();
   });
+  form.addEventListener('change', refrescarSalto);
 })();

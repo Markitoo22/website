@@ -745,6 +745,21 @@ html.modal-abierto{ overflow: hidden; }
   text-transform: uppercase; color: var(--mal);
 }
 .modal__enviar{ width: 100%; justify-content: center; }
+
+/* El aviso de que se esta abriendo la app, con la salida por si no
+   abre. Aparece recien despues de tocar Confirmar, y solo en telefonos:
+   ahi el boton no navega, le pide a la app que se abra. Sin este cartel
+   el toque no tiene ninguna consecuencia visible y parece roto. */
+.modal__salida{
+  margin: 12px 0 0; text-align: center;
+  font-family: var(--tech); font-size: 11px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--muted);
+}
+.modal__salida a{
+  display: inline-block; margin-top: 6px;
+  color: var(--brand); text-decoration: underline;
+  text-underline-offset: 3px;
+}
 /* El submit de verdad: existe solo para que Enter adentro de un campo
    siga enviando. Lo que se ve y se toca es el link de arriba. */
 .solo-teclado{

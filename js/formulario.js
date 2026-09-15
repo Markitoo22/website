@@ -41,6 +41,8 @@
   var paisLista = document.getElementById('fPaisLista');
   var ecoTel = document.getElementById('fTelEco');
   var error = document.getElementById('fError');
+  var salida = document.getElementById('fSalida');      /* "abriendo..." */
+  var salidaLink = document.getElementById('fEscape');  /* por si no abrio */
   var plantilla = document.getElementById('fPlantilla');
 
   /* De donde salio: el numero lo pone el propio boton, no este archivo.
@@ -50,6 +52,59 @@
 
   /* cuanto se espera antes de dar por perdido el salto a WhatsApp */
   var ESPERA_SALTO = 15000;
+
+  /* ------------------------------------------------------------------
+     EL SALTO EN EL TELEFONO: whatsapp://, NO https://wa.me
+
+     wa.me es una pagina web. Para llegar al chat hay que CARGARLA, y
+     recien despues ella le pide al sistema que abra la app. Ese rodeo
+     por http cuesta dos cosas.
+
+     Una: el navegador interno de Facebook, cuando ve una salida http a
+     otro dominio, muestra su cartel. Pero para entonces ya navego, asi
+     que el cartel sale sobre la pagina de WhatsApp y no sobre la
+     nuestra. Lo que queda de fondo es de otro.
+
+     Dos, y es la grave: nuestra pagina MUERE ahi. Y con ella muere el
+     reloj que detecta a los que no llegan, que es el unico motivo por el
+     que la planilla tiene algo adentro. Con un salto http, adentro del
+     navegador de Facebook, el escenario C no puede existir.
+
+     El esquema whatsapp:// no es una navegacion web: no hay pagina que
+     cargar. El sistema recibe el pedido y la nuestra se queda donde
+     estaba, viva y a la vista. Si la persona acepta, la app pasa
+     adelante y la pagina se oculta: llego. Si cancela, sigue aca y a los
+     15 segundos se guarda: no llego. Las dos ramas quedan bien.
+
+     No es un truco raro: es exactamente lo que hace api.whatsapp.com al
+     tocar "Continuar al chat". Le sacamos el rodeo del medio.
+
+     SOLO EN TELEFONOS. En una PC wa.me abre WhatsApp Web, que anda con
+     solo tener el telefono a mano; whatsapp:// pediria la aplicacion de
+     escritorio instalada. Y esta pagina vende puestas a punto de PC:
+     mucha gente entra desde la computadora que quiere arreglar.
+
+     NO HAY TEMPORIZADOR DE RESPALDO, A PROPOSITO. La version anterior
+     tenia uno: si a los 800 ms la pagina seguia visible, se iba a wa.me
+     igual. Pero el cartel NO oculta la pagina —esta encima—, asi que
+     saltaba con el cartel abierto y terminaba en el mismo lugar del que
+     queriamos salir. La salida, si la app no abre, la elige la persona
+     con el link de abajo.
+     ------------------------------------------------------------------ */
+  var esTelefono = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '') &&
+                   !!window.matchMedia &&
+                   window.matchMedia('(pointer: coarse)').matches;
+
+  /* https://wa.me/549XXXXXXXXXX  ->  whatsapp://send?phone=549XXXXXXXXXX */
+  function porWeb(d) { return base + '?text=' + encodeURIComponent(mensaje(d)); }
+
+  function destino(d) {
+    if (!esTelefono) return porWeb(d);
+    var numero = base.split('/').pop().replace(/\D/g, '');
+    if (!numero) return porWeb(d);          /* link raro: mejor lo de siempre */
+    return 'whatsapp://send?phone=' + numero +
+           '&text=' + encodeURIComponent(mensaje(d));
+  }
 
   /* ------------------------------------------------------------------
      EL CURSOR PROPIO Y LA TOP LAYER
@@ -94,6 +149,7 @@
   }
 
   function cerrar() {
+    if (salida) salida.hidden = true;
     mudarCursor(document.body);
     document.documentElement.classList.remove('modal-abierto');
   }
@@ -662,8 +718,17 @@
 
       /* el href ya venia puesto por refrescarSalto(); esto es por las
          dudas, y para cubrir el caso de que no haya destino */
-      if (base) enviar.href = base + '?text=' + encodeURIComponent(mensaje(d));
-      else e.preventDefault();
+      if (!base) { e.preventDefault(); return; }
+      enviar.href = destino(d);
+
+      /* En el telefono esto NO navega: el esquema se lo lleva el sistema
+         y la pagina se queda. Como no se va, hay que avisar que algo
+         esta pasando —si no, parece que el boton no hizo nada— y dejar
+         la salida por wa.me para el que no tenga la app instalada. */
+      if (esTelefono && salida) {
+        salida.hidden = false;
+        if (salidaLink) salidaLink.href = porWeb(d);
+      }
     });
   }
 
@@ -686,7 +751,7 @@
   function refrescarSalto() {
     if (!enviar) return;
     var d = leer(false);
-    enviar.href = (d && base) ? base + '?text=' + encodeURIComponent(mensaje(d)) : '#';
+    enviar.href = (d && base) ? destino(d) : '#';
   }
 
   /* al corregir, se apaga la marca de error */

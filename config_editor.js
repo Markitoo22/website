@@ -19,7 +19,7 @@
    JSON igual; lo unico distinto es como lo carga el navegador.
    ================================================================== */
 window.MLPC = {
-    "precioAR": "69770",
+    "precioAR": "69777",
     "precioUSD": "54.70",
     "duracion": "45",
     "color": "#00fffb",

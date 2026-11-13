@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Pagina privada: solo se llega con un link de un solo uso. Que no la
+     indexe nadie ni la muestre en resultados. -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" data-brandable href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230A0708'/><rect x='7' y='7' width='18' height='18' fill='none' stroke='%23FF2E2E' stroke-width='3'/></svg>">
+<title>ML PC Performance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://api.country.is">
+<link rel="preconnect" href="https://script.google.com">
+<!-- la misma compuerta de arranque que index.html: ver alla -->
+<script>
+  (function () {
+    var r = document.documentElement;
+    r.classList.add('booting');
+    setTimeout(function () { r.classList.remove('booting'); }, 1600);
+  })();
+</script>
+<script src="config_editor.js?v=20261113"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Quantico:wght@400;700&display=swap">
+<link rel="stylesheet" href="css/theme.css?v=20261113">
+<link rel="stylesheet" href="css/styles.css?v=20261113">
+</head>
+<body>
+
+<canvas id="plexus" aria-hidden="true"></canvas>
+<div class="cursor-glow" id="glow" aria-hidden="true"></div>
+<div class="cursor" id="cursor" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+<div class="scanlines" aria-hidden="true"></div>
+
+<div class="wrap">
+  <span id="sentinel" aria-hidden="true"></span>
+
+  <header class="top" id="top">
+    <div class="row top__in">
+      <a class="brand" href="./">
+        <svg class="brand__mark" id="logo-ml" viewBox="0 0 1000 1041" role="img" aria-label="ML">
+        <path d="M500 0 Q250 43 0 147 L0 570 C0 770 448 1012 500 1041 C552 1012 1000 770 1000 570 L1000 147 Q750 43 500 0 Z" class="l-ink"/>
+        <path d="M500 26 Q250 69 25 163 L25 570 C25 758 451 987 500 1014 C549 987 975 758 975 570 L975 163 Q750 69 500 26 Z" class="l-shade"/>
+        <path d="M500 62 Q250 105 60 185 L60 570 C60 742 455 950 500 975 C545 950 940 742 940 570 L940 185 Q750 105 500 62 Z" class="l-ink"/>
+        <path d="M500 88 Q250 131 85 200 L85 570 C85 730 458 925 500 948 C542 925 915 730 915 570 L915 200 Q750 131 500 88 Z" class="l-field"/>
+        <path d="M500 88 L500 948 C542 925 915 730 915 570 L915 200 Q750 131 500 88 Z" class="l-shade"/>
+        <path d="M155 260 L272 260 L354 440 L445 260 L557 260 L544 293 L544 615 L558 632 L441 632 L455 615 L454 405 L354 575 L252 412 L253 615 L265 632 L154 632 L166 615 L168 293 Z" class="l-ink"/>
+        <path d="M585 260 L702 260 L690 293 L690 550 L858 550 L858 632 L588 632 L600 615 L600 293 Z" class="l-ink"/>
+        </svg>
+        <span class="brand__name">PC&nbsp;Performance</span>
+      </a>
+      <div class="top__right">
+        <div class="lang" id="langBox">
+          <button class="lang__btn" id="langBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Idioma / Language">
+            <span class="lang__code" id="langCode">ES</span>
+            <svg class="lang__caret" width="9" height="6" viewBox="0 0 9 6" fill="none" aria-hidden="true"><path d="M1 1l3.5 3.5L8 1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="lang__menu" id="langMenu" role="listbox" aria-label="Idioma / Language"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="row tpag">
+    <div class="tcaja">
+
+      <!-- mientras se pregunta si el link sirve -->
+      <div data-pantalla="cargando">
+        <p class="tcaja__espera" data-i18n="tf_cargando">Revisando el link…</p>
+      </div>
+
+      <form id="tForm" data-pantalla="form" novalidate hidden>
+        <h1 class="modal__h" data-i18n="tf_title">¿Cómo te fue?</h1>
+        <p class="modal__sub" data-i18n="tf_sub">Tu opinión aparece en la página y ayuda a otros a decidirse.</p>
+
+        <fieldset class="campo opciones testrellas" id="tEstrellas">
+          <legend class="campo__l" data-i18n="tf_rating">¿Cuántas estrellas le das?</legend>
+          <div class="testrellas__fila">
+            <label><input type="radio" name="estrellas" value="1"><span class="solo-teclado" data-i18n="tf_e1">1 estrella</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 1.6l2.6 5.3 5.8.85-4.2 4.1 1 5.8L10 14.9l-5.2 2.75 1-5.8-4.2-4.1 5.8-.85z"/></svg></label>
+            <label><input type="radio" name="estrellas" value="2"><span class="solo-teclado" data-i18n="tf_e2">2 estrellas</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 1.6l2.6 5.3 5.8.85-4.2 4.1 1 5.8L10 14.9l-5.2 2.75 1-5.8-4.2-4.1 5.8-.85z"/></svg></label>
+            <label><input type="radio" name="estrellas" value="3"><span class="solo-teclado" data-i18n="tf_e3">3 estrellas</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 1.6l2.6 5.3 5.8.85-4.2 4.1 1 5.8L10 14.9l-5.2 2.75 1-5.8-4.2-4.1 5.8-.85z"/></svg></label>
+            <label><input type="radio" name="estrellas" value="4"><span class="solo-teclado" data-i18n="tf_e4">4 estrellas</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 1.6l2.6 5.3 5.8.85-4.2 4.1 1 5.8L10 14.9l-5.2 2.75 1-5.8-4.2-4.1 5.8-.85z"/></svg></label>
+            <label><input type="radio" name="estrellas" value="5"><span class="solo-teclado" data-i18n="tf_e5">5 estrellas</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 1.6l2.6 5.3 5.8.85-4.2 4.1 1 5.8L10 14.9l-5.2 2.75 1-5.8-4.2-4.1 5.8-.85z"/></svg></label>
+          </div>
+        </fieldset>
+
+        <label class="campo">
+          <span class="campo__l" data-i18n="tf_nombre">Tu nombre</span>
+          <input class="campo__c" type="text" id="tNombre" maxlength="40" autocomplete="name"
+                 data-i18n-attr="placeholder:tf_nombre_ph" placeholder="Como querés que aparezca">
+        </label>
+
+        <label class="campo">
+          <span class="campo__l"><span data-i18n="tf_texto">Tu experiencia</span><span class="tcuenta" id="tCuenta"></span></span>
+          <textarea class="campo__c ttexto" id="tTexto" rows="5" maxlength="600"
+                    data-i18n-attr="placeholder:tf_texto_ph" placeholder="¿Cómo andaba tu PC antes y cómo anda ahora?"></textarea>
+        </label>
+
+        <p class="modal__err" id="tError" role="alert" hidden></p>
+
+        <button type="submit" class="btn btn--big modal__enviar" id="tEnviar">
+          <span data-i18n="tf_enviar">Publicar mi opinión</span>
+        </button>
+
+        <span id="tTxtFalta" data-i18n="f_falta" hidden></span>
+        <span id="tTxtCorto" data-i18n="tf_corto" hidden></span>
+        <span id="tTxtLargo" data-i18n="tf_largo" hidden></span>
+        <span id="tTxtError" data-i18n="tf_error" hidden></span>
+      </form>
+
+      <div data-pantalla="gracias" hidden>
+        <h1 class="modal__h" data-i18n="tf_gracias_h">¡Gracias!</h1>
+        <p class="modal__sub" data-i18n="tf_gracias">Tu opinión ya está publicada.</p>
+        <a class="btn" href="./#testimonios"><span data-i18n="tf_ver">Verla en el sitio</span></a>
+      </div>
+
+      <div data-pantalla="usado" hidden>
+        <h1 class="modal__h" data-i18n="tf_usado">Este link ya se usó</h1>
+        <p class="modal__sub" data-i18n="tf_usado_d">Cada link sirve para una sola opinión. Si querés cambiar algo, escribime por WhatsApp.</p>
+        <a class="link" href="./#testimonios" data-i18n="tf_ir">Ir al sitio</a>
+      </div>
+      <div data-pantalla="vencido" hidden>
+        <h1 class="modal__h" data-i18n="tf_vencido">Este link venció</h1>
+        <p class="modal__sub" data-i18n="tf_vencido_d">Los links duran unos días. Pedime uno nuevo por WhatsApp.</p>
+        <a class="link" href="./" data-i18n="tf_ir">Ir al sitio</a>
+      </div>
+      <div data-pantalla="invalido" hidden>
+        <h1 class="modal__h" data-i18n="tf_invalido">Este link no funciona</h1>
+        <p class="modal__sub" data-i18n="tf_invalido_d">Revisá que esté completo o pedime uno nuevo por WhatsApp.</p>
+        <a class="link" href="./" data-i18n="tf_ir">Ir al sitio</a>
+      </div>
+
+      <noscript><p class="modal__sub">Para dejar tu opinión hace falta activar JavaScript.</p></noscript>
+    </div>
+  </main>
+</div>
+
+<script src="js/i18n.js?v=20261113"></script>
+<script src="js/plexus.js?v=20261113"></script>
+<script src="js/testimonios.js?v=20261113"></script>
+</body>
+</html>

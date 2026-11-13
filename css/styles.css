@@ -775,6 +775,92 @@ html:has(.campo__c:hover, .acuerdo:hover, .pill:hover, .combo__op:hover) .cursor
   .campo__c{ transition: none; }
 }
 
+/* ============ testimonios (seccion del sitio) ============ */
+.testi__meta{ display: inline-flex; align-items: center; gap: 12px; }
+.testi__prom{
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--fg); font-size: 13px; letter-spacing: .06em;
+}
+.testi__prom svg, .testi__stars svg{ width: 13px; height: 13px; fill: var(--accent); flex: none; }
+.testi__grid{
+  display: grid; grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: clamp(14px, 2vw, 20px); align-items: start;
+}
+.testi__card{
+  margin: 0; padding: clamp(18px, 2.4vw, 24px);
+  background: linear-gradient(180deg, var(--panel), var(--ink-2));
+  border: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 14px;
+}
+.testi__stars{ display: flex; gap: 3px; }
+.testi__stars svg.off{ fill: var(--line); }
+/* pre-line: respeta los renglones que dejo el cliente; el texto viene
+   limpio del servidor (nunca mas de una linea en blanco seguida) */
+.testi__txt{
+  margin: 0; font-size: .95rem; line-height: 1.55; color: var(--fg-2);
+  white-space: pre-line; overflow-wrap: anywhere;
+}
+.testi__pie{
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  padding-top: 12px; border-top: 1px solid var(--line-soft);
+  font-family: var(--tech); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+}
+.testi__pie b{ color: var(--fg); font-weight: 400; overflow-wrap: anywhere; }
+.testi__pie span{ flex: none; }
+.testi__mas{ text-align: center; margin-top: 26px; }
+.testi__mas .link{ background: none; border-width: 0 0 1px; cursor: pointer; }
+
+/* ============ testimonio.html (el formulario del link) ============ */
+.tpag{
+  min-height: calc(100dvh - 62px);
+  display: flex; align-items: center; justify-content: center;
+  padding-block: clamp(28px, 6vh, 64px);
+}
+.tcaja{
+  width: min(470px, 100%);
+  padding: clamp(24px, 5vw, 36px);
+  background: linear-gradient(180deg, var(--panel), var(--ink-2));
+  border: 1px solid var(--line);
+}
+.tcaja .modal__sub:last-child{ margin-bottom: 0; }
+.tcaja .modal__h + .modal__sub + .link, .tcaja .modal__h + .modal__sub + .btn{ margin-top: 4px; }
+.tcaja__espera{
+  margin: 0; text-align: center;
+  font-family: var(--tech); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+}
+.tcaja input, .tcaja textarea{ -webkit-user-select: text; user-select: text; }
+
+/* las estrellas son radios de verdad: el input queda invisible pero
+   sigue en el orden del teclado y para el lector de pantalla */
+.testrellas__fila{ display: flex; gap: 4px; }
+.testrellas label{ position: relative; display: inline-flex; padding: 3px; cursor: pointer; }
+.testrellas input{
+  position: absolute; width: 1px; height: 1px; margin: 0;
+  opacity: 0; pointer-events: none;
+}
+.testrellas svg{
+  width: 34px; height: 34px; fill: var(--line); stroke: var(--gloss); stroke-width: .6;
+  transition: fill .15s var(--ease), transform .15s var(--ease);
+}
+.testrellas label.on svg{ fill: var(--accent); stroke: transparent; }
+.testrellas label:hover svg{ transform: scale(1.08); }
+.testrellas input:focus-visible + span + svg{ outline: 2px solid var(--accent); outline-offset: 2px; }
+.testrellas.mal svg{ stroke: var(--mal); }
+
+.ttexto{ resize: vertical; min-height: 120px; line-height: 1.5; }
+.tcuenta{ float: right; letter-spacing: .06em; }
+.tcuenta.pasado{ color: var(--mal); }
+.btn.cargando{ opacity: .6; pointer-events: none; }
+html:has(.testrellas label:hover) .cursor{ scale: 1.8; }
+
+@media (max-width: 860px){
+  .testi__grid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+@media (max-width: 620px){
+  .testi__grid{ grid-template-columns: 1fr; }
+  .tpag{ min-height: calc(100dvh - 56px); align-items: flex-start; }
+}
+
 /* ============ responsive ============ */
 @media (max-width: 860px){
   .steps{ grid-template-columns: repeat(2, minmax(0,1fr)); }

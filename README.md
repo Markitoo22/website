@@ -16,6 +16,9 @@ js/i18n.js        TODA LA COPY, en 6 idiomas, y la deteccion por pais
 js/plexus.js      fondo reactivo al mouse, entradas, conteo de numeros
 js/drag.js        arrastre de la pagina con el click, con inercia
 js/meta.js        pixel de Meta: eventos Contact y Lead al tocar WhatsApp
+js/testimonios.js testimonios: la seccion del sitio y el formulario del link
+testimonio.html   el formulario al que lleva el link de un solo uso
+servidor/         el Apps Script de los testimonios (copia; corre en Google)
 test-i18n.js      test de la deteccion de idioma: node test-i18n.js
 EDIT/             herramienta del dueño para cambiar valores (NO se versiona)
 CNAME             el dominio propio que usa GitHub Pages
@@ -331,6 +334,56 @@ pasar.
    `entry.N` le toco a cada uno.
 7. Cambiar el `/viewform` final del link por `/formResponse` y pegar todo
    en `window.MLPC_FORM`.
+
+## Testimonios
+
+Solo puede dejar un testimonio quien tenga un **link de un solo uso**, que
+genera el dueño desde Editor.exe al terminar cada trabajo y se lo manda al
+cliente por WhatsApp. El link vence a los 7 dias (`DIAS_LINK` en el script).
+El testimonio aparece en el sitio apenas se envia, sin aprobacion.
+
+```
+Editor.exe --crear--> Apps Script --> hoja "Links"        (token, para, vence, usado)
+cliente ---enviar---> Apps Script --> hoja "Testimonios"  (y quema el link)
+sitio   ---lista----> Apps Script <-- lee "Testimonios" con Mostrar tildado
+```
+
+El sitio es estatico y "un solo uso" exige que alguien recuerde que links ya
+se usaron: eso lo hace un Apps Script pegado a una Google Sheet de la cuenta
+del dueño. Gratis, sin otra cuenta, y la planilla sirve de panel.
+
+- **Sacar un testimonio:** destildar "Mostrar" en la hoja Testimonios. Se ve
+  al instante. Borrar el renglon tambien anda, pero tarda hasta 5 minutos.
+- **Corregir un texto:** editarlo en la planilla.
+- Si no hay testimonios, o Google no contesta, la seccion no aparece.
+- El texto del cliente se pinta siempre como texto (nunca HTML) y en la
+  planilla se guarda con apostrofo, asi nada se interpreta como formula.
+
+### Instalacion (una sola vez, con la cuenta de Google del dueño)
+
+1. `sheets.new` → planilla nueva, ponerle de nombre "Testimonios web".
+2. **Extensiones → Apps Script.** Borrar lo que haya y pegar todo
+   `servidor/testimonios.gs`. Guardar.
+3. Arriba, elegir la funcion `configurar` → **Ejecutar**. Pide permisos
+   (es el propio script del dueño): Revisar permisos → la cuenta →
+   Configuracion avanzada → Ir a ... → Permitir. En el registro de abajo
+   aparece la **CLAVE**: guardarla, es para el editor.
+4. **Implementar → Nueva implementacion** → tipo **Aplicacion web**.
+   Ejecutar como: **Yo**. Quien tiene acceso: **Cualquier persona**.
+   Implementar y copiar la URL que termina en `/exec`.
+5. Pegar esa URL en `js/testimonios.js`, en la linea `var API = '...'`
+   (no cambiar el formato de esa linea: Editor.exe la lee de ahi), subir el
+   `?v=` y publicar.
+6. Abrir Editor.exe: en "Link para dejar un testimonio" pide la clave del
+   paso 3 una sola vez.
+
+**Si se cambia el script:** Implementar → Administrar implementaciones →
+lapiz → Version: **Nueva version**. Asi la URL queda igual. Una
+implementacion *nueva* cambia la URL y habria que repetir el paso 5.
+
+Los tests del editor (`go test ./...` en EDIT/) cubren que la linea
+`var API` se encuentre y que se siga la redireccion con la que contesta
+Google.
 
 ## Pixel de Meta
 

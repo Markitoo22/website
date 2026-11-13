@@ -327,7 +327,11 @@
     };
     vista.addEventListener('pointerup', soltar);
     vista.addEventListener('pointercancel', soltar);
-    vista.addEventListener('lostpointercapture', soltar);
+    /* Solo si el que pierde el puntero es el carrusel. En tactil el
+       navegador ya tiene "agarrado" el dedo en la tarjeta tocada, y al
+       pasarselo al carrusel la tarjeta avisa que lo perdio: ese aviso
+       sube hasta aca y cortaba el arrastre apenas empezaba. */
+    vista.addEventListener('lostpointercapture', function (e) { if (e.target === vista) soltar(); });
 
     /* el alto de cada pagina depende del ancho (en un celular las
        tarjetas van en una columna): se vuelve a medir al girar o achicar */

@@ -18,6 +18,8 @@
      POST {accion:'enviar', ...} guarda un testimonio y quema el link
      POST {accion:'crear', clave, para}   genera un link nuevo (Editor.exe)
      POST {accion:'links', clave}         los ultimos links y su estado
+     POST {accion:'turno', clave, tel}    avisa a Meta que esa persona
+                                          agendo turno (evento Schedule)
 
    Crear y listar links pide la CLAVE, que vive en las propiedades del
    script (nunca en el codigo ni en el repo) y la conoce solo el editor.
@@ -40,6 +42,15 @@ var MAX_NOMBRE = 40;
 var MIN_TEXTO = 10;
 var MAX_TEXTO = 500;
 var CACHE_SEG = 300;          /* la lista se guarda 5 min en memoria */
+
+/* META: el pixel del sitio (el mismo de index.html) y la version de la
+   API. El TOKEN no va aca: va en Configuracion del proyecto -> Propiedades
+   del script, con el nombre META_TOKEN (ver README, "Turno agendado").
+   META_PRUEBA, opcional: el codigo de "Probar eventos" de Events Manager,
+   para ver los eventos llegar sin que cuenten. Borrarlo al terminar. */
+var PIXEL_ID = '1124671366336545';
+var META_API = 'v26.0';
+var HOJA_TURNOS = 'Turnos';
 
 /* ------------------------------------------------------------------
    UNA SOLA VEZ: elegir esta funcion arriba y apretar "Ejecutar".
@@ -108,6 +119,7 @@ function doPost(e) {
     if (d.accion === 'enviar') return json(enviar(d));
     if (d.accion === 'crear') return json(crear(d));
     if (d.accion === 'links') return json(links(d));
+    if (d.accion === 'turno') return json(turno(d));
     return json({ ok: false, error: 'accion' });
   } catch (err) {
     return json({ ok: false, error: 'servidor' });
@@ -238,6 +250,73 @@ function links(d) {
 /* ------------------------------------------------------------------
    Auxiliares
    ------------------------------------------------------------------ */
+
+/* ------------------------------------------------------------------
+   TURNO AGENDADO -> evento Schedule a Meta (API de Conversiones)
+
+   El turno se arregla por WhatsApp, fuera de la pagina, asi que el
+   pixel no se entera. Lo avisa el dueño desde Editor.exe con el
+   telefono del cliente, y Meta lo cruza con la persona que vio el
+   anuncio. El telefono viaja CIFRADO (SHA-256), como pide Meta: nunca
+   sale de aca en claro.
+   ------------------------------------------------------------------ */
+function turno(d) {
+  if (!claveOk_(d.clave)) return { ok: false, error: 'clave' };
+  var props = PropertiesService.getScriptProperties();
+  var token = props.getProperty('META_TOKEN');
+  if (!token) return { ok: false, error: 'meta_token' };
+
+  var tel = String(d.tel || '').replace(/\D/g, '').replace(/^00/, '');
+  if (tel.length < 10 || tel.length > 15 || tel.charAt(0) === '0') return { ok: false, error: 'tel' };
+
+  /* Argentina: el mismo celular figura con el 9 (+54 9 11...) o sin el
+     (+54 11...) segun donde se haya cargado. Se mandan las dos formas
+     y Meta usa la que coincida. */
+  var formas = [tel];
+  if (/^549\d{10}$/.test(tel)) formas.push('54' + tel.slice(3));
+  else if (/^54\d{10}$/.test(tel)) formas.push('549' + tel.slice(2));
+
+  var evento = {
+    event_name: 'Schedule',
+    event_time: Math.floor(Date.now() / 1000),
+    event_id: Utilities.getUuid(),
+    action_source: 'chat',
+    user_data: { ph: formas.map(sha256_) }
+  };
+  var cuerpo = { data: [evento] };
+  var prueba = props.getProperty('META_PRUEBA');
+  if (prueba) cuerpo.test_event_code = prueba;
+
+  var r = UrlFetchApp.fetch(
+    'https://graph.facebook.com/' + META_API + '/' + PIXEL_ID + '/events?access_token=' + encodeURIComponent(token),
+    { method: 'post', contentType: 'application/json', payload: JSON.stringify(cuerpo), muteHttpExceptions: true });
+  var codigo = r.getResponseCode();
+  var resp = {};
+  try { resp = JSON.parse(r.getContentText()); } catch (e) {}
+
+  var ok = codigo === 200 && resp.events_received === 1;
+  var detalle = ok ? 'recibido' + (prueba ? ' (prueba)' : '')
+                   : ((resp.error && resp.error.message) || ('Meta respondio ' + codigo));
+
+  /* registro para el dueño: cuando, a quien (solo los ultimos 4
+     numeros) y que contesto Meta */
+  var libro = libro_();
+  var h = libro.getSheetByName(HOJA_TURNOS);
+  if (!h) {
+    h = libro.insertSheet(HOJA_TURNOS);
+    h.appendRow(['Fecha', 'Telefono', 'Meta']);
+    h.setFrozenRows(1);
+    h.getRange('A1:C1').setFontWeight('bold');
+  }
+  h.appendRow([new Date(), texto_('...' + tel.slice(-4)), texto_(detalle)]);
+
+  return ok ? { ok: true, prueba: !!prueba } : { ok: false, error: 'meta', detalle: detalle };
+}
+
+function sha256_(s) {
+  return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, s, Utilities.Charset.UTF_8)
+    .map(function (b) { return ('0' + (b & 255).toString(16)).slice(-2); }).join('');
+}
 
 function json(o) {
   return ContentService.createTextOutput(JSON.stringify(o))

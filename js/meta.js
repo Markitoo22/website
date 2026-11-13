@@ -5,9 +5,23 @@
    (window.MLPC_PIXEL). Si esta vacio no pasa nada: ni script de Meta,
    ni cookies, ni este archivo hace nada.
 
-   Aca se mide UN solo hecho: el click en un boton de WhatsApp, que es
-   el que abre el formulario. Va como Contact ("Contactar" en Ads
-   Manager) y significa intencion, nada mas.
+   Aca se miden dos hechos:
+
+   - ViewContent ("Ver contenido"): llego a ver los RESULTADOS (el antes
+     y despues). Es interes real, no rebote: para llegar hay que bajar
+     por la pagina en cualquier pantalla. Uno por visita. Sirve para
+     audiencias ("vio los resultados y no escribio") y para optimizar
+     mientras todavia hay pocos Leads.
+   - Contact ("Contactar"): el click en un boton de WhatsApp, que es el
+     que abre el formulario. Significa intencion, nada mas.
+
+   El embudo completo, de punta a punta:
+     ViewContent  vio los resultados               (aca)
+     Contact      abrio el formulario              (aca)
+     Lead         lo completo y dejo sus datos     (js/formulario.js)
+     Schedule     agendo turno por WhatsApp        (Editor.exe, por el
+                                                    servidor: pasa fuera
+                                                    de la pagina)
 
    EL "CLIENTE POTENCIAL" (Lead) YA NO SE DISPARA ACA. Lo manda
    js/formulario.js cuando alguien completa y envia el formulario, que
@@ -88,6 +102,46 @@
     window.addEventListener(senales[i], marcarHumano, { passive: true });
   }
   window.addEventListener('pointerdown', desdeElDedo, { passive: true });
+
+  /* ------------------------------------------------------------------
+     VIEWCONTENT: cuando la seccion de resultados se ve en al menos un
+     30%, con la pagina a la vista y una persona del otro lado.
+     Aca el scroll SOLO no alcanza como señal (en el click si, porque
+     ademas hay que apuntar al boton): un bot puede scrollear por codigo
+     sin tocar nada. Cuenta un gesto de verdad: mover el mouse, la rueda,
+     el dedo o el teclado. Si llega a la seccion antes de cualquier
+     gesto, se espera al primero.
+     ------------------------------------------------------------------ */
+  var resultados = document.getElementById('resultados');
+  if (resultados && 'IntersectionObserver' in window) {
+    var mandado = false;
+    var enVista = false;
+    var gesto = false;
+    var intentar = function () {
+      if (mandado || !enVista || !gesto || navigator.webdriver) return;
+      if (document.prerendering || document.visibilityState !== 'visible') return;
+      if (typeof window.fbq !== 'function') return;
+      mandado = true;
+      io.disconnect();
+      window.fbq('track', 'ViewContent', {
+        content_name: 'resultados',
+        content_category: document.documentElement.lang || ''
+      });
+    };
+    var io = new IntersectionObserver(function (en) {
+      enVista = en[0].isIntersecting;
+      intentar();
+    }, { threshold: 0.3 });
+    io.observe(resultados);
+    ['pointermove', 'wheel', 'keydown', 'touchstart'].forEach(function (t) {
+      window.addEventListener(t, function () {
+        if (mandado) return;
+        gesto = true;
+        window.setTimeout(intentar, 0);
+      }, { passive: true });
+    });
+    document.addEventListener('visibilitychange', intentar);
+  }
 
   /* ------------------------------------------------------------------
      El listener va en document y burbujeando A PROPOSITO: js/drag.js

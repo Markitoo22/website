@@ -36,7 +36,18 @@
   var fijo = null;                 /* destino de un click, mientras se viaja */
   var finViaje = 0;
 
+  var encendida = null;
   function encender(a) {
+    /* en el celular la tira se desliza: se corre para que la encendida
+       quede a la vista (centrada), solo cuando cambia */
+    if (a && a !== encendida && nav.scrollWidth > nav.clientWidth) {
+      var ra = a.getBoundingClientRect(), rn = nav.getBoundingClientRect();
+      nav.scrollTo({
+        left: nav.scrollLeft + (ra.left + ra.width / 2) - (rn.left + rn.width / 2),
+        behavior: reduce ? 'auto' : 'smooth'
+      });
+    }
+    encendida = a;
     links.forEach(function (l) {
       if (l === a) l.setAttribute('aria-current', 'true');
       else l.removeAttribute('aria-current');
@@ -60,10 +71,14 @@
   }
 
   var pedido = 0;
+  /* en el celular Precio y Contacto no se muestran (los esconde el CSS):
+     leyendo esas secciones no se enciende ninguna, en vez de una ajena */
+  function seVe(a) { return !!a && a.getClientRects().length > 0; }
   function revisar() {
     pedido = 0;
     sincronizar();
-    encender(fijo || actual());
+    var a = fijo || actual();
+    encender(seVe(a) ? a : null);
   }
   function alScrollear() {
     if (!pedido) pedido = window.requestAnimationFrame(revisar);

@@ -385,6 +385,36 @@ Los tests del editor (`go test ./...` en EDIT/) cubren que la linea
 `var API` se encuentre y que se siga la redireccion con la que contesta
 Google.
 
+## Turno agendado (evento Schedule)
+
+El turno se arregla por WhatsApp, fuera de la pagina, asi que el pixel no
+lo ve. Lo avisa el dueño desde Editor.exe ("Turno agendado · avisar a
+Meta") con el telefono del cliente; el Apps Script de los testimonios lo
+manda a Meta por la **API de Conversiones**, con el telefono cifrado
+(SHA-256). Para un celular argentino se mandan las dos formas (+54 9 11...
+y +54 11...) y Meta usa la que coincida. Cada aviso queda en la hoja
+"Turnos" (solo los ultimos 4 numeros).
+
+### Instalacion (una sola vez)
+
+1. **El token de Meta.** Events Manager → el pixel `1124671366336545` →
+   Configuracion → *API de Conversiones* → **Generar token de acceso**.
+   Copiarlo.
+2. En Apps Script: ⚙ **Configuracion del proyecto** → abajo de todo,
+   **Propiedades del script** → Agregar: nombre `META_TOKEN`, valor el
+   token. Guardar.
+3. Pegar el `servidor/testimonios.gs` nuevo, guardar, y ejecutar
+   `configurar` una vez: pide un permiso nuevo ("conectarse a un servicio
+   externo"), que es el de hablar con Meta. Aceptarlo.
+4. **Implementar → Administrar implementaciones → lapiz → Version: Nueva
+   version → Implementar.** (Nueva *version*, no nueva implementacion: asi
+   la URL queda igual.)
+
+**Para probar sin ensuciar las estadisticas:** en Events Manager → *Probar
+eventos* copiar el codigo (TEST1234...) y agregarlo como propiedad del
+script `META_PRUEBA`. Los avisos aparecen ahi en vivo y no cuentan. Al
+terminar, **borrar la propiedad**.
+
 ## Pixel de Meta
 
 Sirve para que Meta optimice la campaña hacia gente que realmente toca el

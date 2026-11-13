@@ -173,8 +173,33 @@ html.booting .rise{ animation: none; }
 .nav a[aria-current="true"]::after{ transform: scaleX(1); }
 /* sin anclas por codigo (sin JS), el header fijo taparia el titulo */
 main > section[id]{ scroll-margin-top: 62px; }
-/* no entra junto con el logo, el idioma y WhatsApp */
-@media (max-width: 960px){ .nav{ display: none; } }
+/* SIN LUGAR PARA TODO (celular y tablet): el logo queda solo el escudo,
+   WhatsApp solo su icono, y las secciones ocupan el medio como una tira
+   que se desliza de costado con el dedo, sin sumar otra fila al header.
+   Los bordes se desvanecen para que se note que hay mas de cada lado;
+   js/nav.js corre la tira para que la encendida quede siempre a la vista. */
+@media (max-width: 960px){
+  .brand__name{ display: none; }
+  /* .top delante: la regla general de .top__cta esta mas abajo en el
+     archivo y, con el mismo peso, le ganaba a esta */
+  .top .top__cta{ padding: 7px; }      /* el icono queda del mismo tamaño: se achica la caja */
+  .top__cta-txt{ display: none; }
+  .top__in{ gap: 12px; }
+  .top__right{ gap: 10px; }
+  .nav{
+    flex: 1 1 auto; min-width: 0; gap: 18px;
+    overflow-x: auto; overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    padding-inline: 14px;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 14px), transparent);
+            mask-image: linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 14px), transparent);
+  }
+  .nav::-webkit-scrollbar{ display: none; }
+  .nav a{ flex: none; }
+  /* Precio y Contacto no: el precio esta apenas abajo del titulo y el
+     contacto es el boton de WhatsApp que tienen al lado */
+  .nav a.nav__ancho{ display: none; }
+}
 
 /* ---- selector de idioma ----
    Menu propio en lugar de un <select>: el nativo abre una lista del
@@ -965,7 +990,14 @@ html:has(.testrellas label:hover, .testi__punto:hover, .testi__flecha:hover, .te
   .testi__pag{ grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
 @media (max-width: 620px){
-  .testi__pag{ grid-template-columns: 1fr; }
+  .testi__pag{ grid-template-columns: 1fr; gap: 12px; }
+  /* en el celular la tarjeta ocupa todo el ancho: con 4 renglones entra
+     lo mismo que con 6 en la PC, y la caja queda bastante mas baja */
+  .testi__card{ padding: 12px 16px; gap: 7px; }
+  .testi__leer{ margin-top: -4px; }
+  .testi__txt{ --renglon: 1.45em; line-height: 1.45; height: calc(var(--renglon) * 4); }
+  .testi__txt--corto p{ font-size: 1.12rem; }
+  .testi__pie{ padding-top: 8px; }
   .tpag{ min-height: calc(100dvh - 56px); align-items: flex-start; }
 }
 

@@ -151,6 +151,31 @@ html.booting .rise{ animation: none; }
 }
 .top__right{ display: flex; align-items: center; gap: 14px; }
 
+/* ---- las secciones (js/nav.js) ----
+   La encendida lleva una rayita del color de marca abajo, que se corre
+   de una a otra con la misma curva que el resto del sitio. */
+.nav{ display: flex; align-items: center; gap: clamp(14px, 2.2vw, 28px); }
+.nav a{
+  position: relative; padding: 8px 0;
+  font-family: var(--tech); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--muted); white-space: nowrap;
+  transition: color .25s var(--ease);
+}
+.nav a[hidden]{ display: none; }
+.nav a::after{
+  content: ''; position: absolute; left: 0; right: 0; bottom: 2px; height: 1px;
+  background: var(--accent);
+  transform: scaleX(0); transform-origin: left center;
+  transition: transform .35s var(--ease);
+}
+.nav a:hover{ color: var(--fg); }
+.nav a[aria-current="true"]{ color: var(--fg); }
+.nav a[aria-current="true"]::after{ transform: scaleX(1); }
+/* sin anclas por codigo (sin JS), el header fijo taparia el titulo */
+main > section[id]{ scroll-margin-top: 62px; }
+/* no entra junto con el logo, el idioma y WhatsApp */
+@media (max-width: 960px){ .nav{ display: none; } }
+
 /* ---- selector de idioma ----
    Menu propio en lugar de un <select>: el nativo abre una lista del
    sistema operativo, blanca y con fuente de sistema, que no se puede
@@ -776,39 +801,122 @@ html:has(.campo__c:hover, .acuerdo:hover, .pill:hover, .combo__op:hover) .cursor
 }
 
 /* ============ testimonios (seccion del sitio) ============ */
+.testi__herr{ display: flex; align-items: center; gap: 14px 22px; flex-wrap: wrap; }
 .testi__meta{ display: inline-flex; align-items: center; gap: 12px; }
+/* los botones de orden: un grupo segmentado, chico, en la misma voz que
+   las etiquetas del sitio. El elegido se enciende con el acento. */
+.testi__orden{ display: inline-flex; border: 1px solid var(--line); border-radius: 2px; }
+.testi__orden button{
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 11px; margin: 0;
+  background: transparent; border: 0; border-left: 1px solid var(--line);
+  font-family: var(--tech); font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--muted); cursor: pointer;
+  transition: color .2s var(--ease), background-color .2s var(--ease);
+}
+.testi__orden button:first-child{ border-left: 0; }
+.testi__orden button svg{ width: 10px; height: 10px; fill: currentColor; flex: none; }
+.testi__orden button:hover{ color: var(--fg); }
+.testi__orden button[aria-pressed="true"]{ color: var(--fg); background: rgb(from var(--accent) r g b / .13); }
+.testi__orden button[aria-pressed="true"] svg{ fill: var(--accent); }
 .testi__prom{
   display: inline-flex; align-items: center; gap: 6px;
   color: var(--fg); font-size: 13px; letter-spacing: .06em;
 }
 .testi__prom svg, .testi__stars svg{ width: 13px; height: 13px; fill: var(--accent); flex: none; }
-.testi__grid{
-  display: grid; grid-template-columns: repeat(3, minmax(0,1fr));
-  gap: clamp(14px, 2vw, 20px); align-items: start;
+/* el carrusel: la vista recorta, la pista lleva todas las paginas en
+   fila y se corre de a 100%. El alto de la vista lo pone el JS con el
+   de la pagina que se ve, y se anima. */
+.testi__vista{
+  overflow: hidden; touch-action: pan-y;
+  transition: height .45s var(--ease);
 }
+.testi__pista{ display: flex; align-items: flex-start; transition: transform .55s var(--ease); }
+.testi__pista.arrastrando{ transition: none; }
+.testi__pag{
+  flex: 0 0 100%; min-width: 0;
+  display: grid; grid-template-columns: repeat(3, minmax(0,1fr));
+  gap: clamp(14px, 2vw, 20px);
+}
+.testi__nav{ display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 28px; }
+.testi__nav[hidden]{ display: none; }
+.testi__flecha{
+  width: 40px; height: 40px; padding: 0; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: 1px solid var(--line); border-radius: 2px;
+  color: var(--fg-2); cursor: pointer;
+  transition: border-color .2s var(--ease), color .2s var(--ease), opacity .2s var(--ease);
+}
+.testi__flecha:hover:not(:disabled){ border-color: var(--accent); color: var(--fg); }
+.testi__flecha:disabled{ opacity: .3; cursor: default; }
+.testi__puntos{ display: flex; align-items: center; gap: 4px; }
+/* el boton es grande (para el dedo); lo que se ve es la rayita de adentro */
+.testi__punto{
+  width: 26px; height: 28px; padding: 0; border: 0; background: transparent; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.testi__punto::before{
+  content: ''; display: block; width: 14px; height: 2px; background: var(--line);
+  transition: background-color .25s var(--ease), width .25s var(--ease);
+}
+.testi__punto:hover::before{ background: var(--muted); }
+.testi__punto[aria-current="true"]::before{ width: 22px; background: var(--accent); }
 .testi__card{
-  margin: 0; padding: clamp(18px, 2.4vw, 24px);
+  margin: 0; padding: clamp(18px, 2.4vw, 24px); height: 100%;
   background: linear-gradient(180deg, var(--panel), var(--ink-2));
   border: 1px solid var(--line);
   display: flex; flex-direction: column; gap: 14px;
 }
 .testi__stars{ display: flex; gap: 3px; }
 .testi__stars svg.off{ fill: var(--line); }
-/* pre-line: respeta los renglones que dejo el cliente; el texto viene
+/* EL TEXTO TIENE ALTO FIJO: 6 renglones. Asi todas las tarjetas miden
+   lo mismo en todas las paginas y el carrusel no salta.
+   - lo que no entra se corta con un desvanecido y "Leer mas"
+   - lo corto (una frase) va grande, como cita, para llenar la caja
+   pre-line: respeta los renglones que dejo el cliente; el texto viene
    limpio del servidor (nunca mas de una linea en blanco seguida) */
 .testi__txt{
+  --renglon: 1.55em;
   margin: 0; font-size: .95rem; line-height: 1.55; color: var(--fg-2);
+  height: calc(var(--renglon) * 6);
   white-space: pre-line; overflow-wrap: anywhere;
 }
+.testi__txt p{ margin: 0; max-height: 100%; overflow: hidden; }
+.es-largo .testi__txt p{
+  -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 2.2em), transparent);
+          mask-image: linear-gradient(180deg, #000 calc(100% - 2.2em), transparent);
+}
+.testi__txt--corto{ display: flex; align-items: center; }
+.testi__txt--corto p{
+  font-family: var(--tech); font-size: 1.32rem; line-height: 1.3;
+  letter-spacing: .005em; color: var(--fg); text-wrap: balance;
+}
+/* "Leer mas": el renglon existe siempre (asi el alto no cambia) y el
+   boton se ve solo si el texto no entro */
+.testi__leer{
+  align-self: flex-start; margin-top: -6px; padding: 0;
+  background: none; border: 0; border-bottom: 1px solid var(--line);
+  font-family: var(--tech); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--accent); cursor: pointer; visibility: hidden;
+}
+.testi__leer:hover{ border-color: var(--accent); }
+.es-largo .testi__leer{ visibility: visible; }
+/* en la ventanita: el texto entero, sin alto fijo ni "Leer mas" */
+.testi__modal{ width: min(560px, calc(100vw - 32px)); }
+.testi__modal .modal__caja{ padding-top: 46px; }
+.testi__card--entera{ background: none; border: 0; padding: 0; height: auto; }
+.testi__card--entera .testi__txt{ height: auto; font-size: 1rem; color: var(--fg); }
+.testi__card--entera .testi__txt p{ max-height: none; -webkit-mask-image: none; mask-image: none; }
+.testi__card--entera .testi__leer{ display: none; }
+.testi__card--entera .testi__pie{ margin-top: 6px; }
 .testi__pie{
+  margin-top: auto;   /* al pie de la tarjeta, aunque el texto sea corto */
   display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
   padding-top: 12px; border-top: 1px solid var(--line-soft);
   font-family: var(--tech); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
 }
 .testi__pie b{ color: var(--fg); font-weight: 400; overflow-wrap: anywhere; }
 .testi__pie span{ flex: none; }
-.testi__mas{ text-align: center; margin-top: 26px; }
-.testi__mas .link{ background: none; border-width: 0 0 1px; cursor: pointer; }
 
 /* ============ testimonio.html (el formulario del link) ============ */
 .tpag{
@@ -851,13 +959,13 @@ html:has(.campo__c:hover, .acuerdo:hover, .pill:hover, .combo__op:hover) .cursor
 .tcuenta{ float: right; letter-spacing: .06em; }
 .tcuenta.pasado{ color: var(--mal); }
 .btn.cargando{ opacity: .6; pointer-events: none; }
-html:has(.testrellas label:hover) .cursor{ scale: 1.8; }
+html:has(.testrellas label:hover, .testi__punto:hover, .testi__flecha:hover, .testi__leer:hover, .testi__orden button:hover) .cursor{ scale: 1.8; }
 
 @media (max-width: 860px){
-  .testi__grid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .testi__pag{ grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
 @media (max-width: 620px){
-  .testi__grid{ grid-template-columns: 1fr; }
+  .testi__pag{ grid-template-columns: 1fr; }
   .tpag{ min-height: calc(100dvh - 56px); align-items: flex-start; }
 }
 

@@ -61,6 +61,15 @@
     v = v * 0.72 - dy * 0.28;         /* velocidad suavizada, en px por frame */
   }, { passive: true });
 
+  /* Otro gesto se quedo con el arrastre (el carrusel de testimonios,
+     cuando el movimiento resulta ser horizontal): se suelta la pagina
+     en el lugar, sin envion. */
+  document.addEventListener('mlpc:soltar-pagina', function () {
+    if (!dragging) return;
+    dragging = false; pid = null; v = 0;
+    root.classList.remove('dragging');
+  });
+
   function release() {
     if (!dragging) return;
     dragging = false; pid = null;

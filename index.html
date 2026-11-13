@@ -63,14 +63,14 @@
      asi WhatsApp anda aunque el JavaScript no llegue a correr.
      Va aca arriba y sin defer porque el color de marca tiene que estar
      puesto antes del primer pintado. -->
-<script src="config_editor.js?v=20261113"></script>
+<script src="config_editor.js?v=20261113a"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Quantico:wght@400;700&display=swap">
 <!-- ?v= corta el cache del CDN: Pages sirve con max-age=600 y cada nodo
      guarda su copia, asi que sin esto un visitante (o un celular en 4G,
      que sale por otro nodo) puede ver hasta 10 minutos la version vieja.
      SUBIR ESTE NUMERO EN CADA DEPLOY que toque css/ o js/. -->
-<link rel="stylesheet" href="css/theme.css?v=20261113">
-<link rel="stylesheet" href="css/styles.css?v=20261113">
+<link rel="stylesheet" href="css/theme.css?v=20261113a">
+<link rel="stylesheet" href="css/styles.css?v=20261113a">
 </head>
 <body>
 <canvas id="plexus" aria-hidden="true"></canvas>
@@ -96,6 +96,14 @@
         </svg>
         <span class="brand__name">PC&nbsp;Performance</span>
       </div>
+      <!-- las secciones: js/nav.js scrollea y enciende la que se esta leyendo -->
+      <nav class="nav" id="nav" data-i18n-attr="aria-label:nav_aria" aria-label="Secciones">
+        <a href="#precio" data-i18n="nav_precio">Precio</a>
+        <a href="#servicio" data-i18n="nav_servicio">Servicio</a>
+        <a href="#resultados" data-i18n="nav_resultados">Resultados</a>
+        <a href="#testimonios" data-i18n="nav_opiniones" hidden>Opiniones</a>
+        <a href="#contacto" data-i18n="nav_contacto">Contacto</a>
+      </nav>
       <div class="top__right">
         <!-- el menu lo arma js/i18n.js desde su lista de idiomas -->
         <div class="lang" id="langBox">
@@ -127,7 +135,7 @@
       <p class="note rise d4" data-i18n="note_hero">Sin mover la máquina &middot; Respondo el mismo día</p>
       <p class="note note--lang rise d4" data-lang-note data-i18n="session_lang" hidden>Las sesiones son en español o inglés.</p>
     </section>
-    <section class="row sec" data-reveal>
+    <section class="row sec" id="precio" data-reveal>
       <div class="stats">
         <div class="stat">
           <!-- el monto y la moneda los pone js/i18n.js segun el pais -->
@@ -143,7 +151,7 @@
       <!-- la frase que edita el dueño; el texto va en mayusculas por CSS -->
       <p class="claim"><span class="claim__t" data-frase></span></p>
     </section>
-    <section class="row sec" data-reveal>
+    <section class="row sec" id="servicio" data-reveal>
       <div class="sec__head">
         <h2 class="sec__title" data-i18n="sec_steps">Qué le hago a tu PC</h2>
         <p class="sec__meta" data-i18n="steps_meta">4 pasos &middot; en orden</p>
@@ -214,16 +222,37 @@
          link de un solo uso que genera el dueño desde Editor.exe. -->
     <section class="row sec testi" id="testimonios" hidden>
       <div class="sec__head">
-        <h2 class="sec__title" data-i18n="t_sec">Lo que dicen los clientes</h2>
-        <p class="sec__meta testi__meta"><span class="testi__prom" id="tProm" role="img"></span><span id="tCant"></span></p>
+        <h2 class="sec__title" data-i18n="t_sec">Lo que dicen nuestros clientes</h2>
+        <div class="testi__herr">
+          <!-- como se ordenan: el default es el cronologico, el mas nuevo primero -->
+          <div class="testi__orden" id="tOrden" role="group" data-i18n-attr="aria-label:t_ordenar" aria-label="Ordenar">
+            <button type="button" data-orden="fecha" aria-pressed="true" data-i18n="t_ord_fecha">Recientes</button>
+            <button type="button" data-orden="mas" aria-pressed="false"><span data-i18n="t_ord_mas">Mayor</span> <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 1.6l2.6 5.3 5.8.85-4.2 4.1 1 5.8L10 14.9l-5.2 2.75 1-5.8-4.2-4.1 5.8-.85z"/></svg></button>
+            <button type="button" data-orden="menos" aria-pressed="false"><span data-i18n="t_ord_menos">Menor</span> <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 1.6l2.6 5.3 5.8.85-4.2 4.1 1 5.8L10 14.9l-5.2 2.75 1-5.8-4.2-4.1 5.8-.85z"/></svg></button>
+          </div>
+          <p class="sec__meta testi__meta"><span class="testi__prom" id="tProm" role="img"></span><span id="tCant"></span></p>
+        </div>
       </div>
-      <div class="testi__grid" id="tLista"></div>
-      <div class="testi__mas"><button class="link" id="tMas" type="button" data-i18n="t_mas" hidden>Ver más</button></div>
+      <!-- el carrusel: paginas de 6, la mas nueva a la izquierda -->
+      <div class="testi__vista" id="tVista">
+        <div class="testi__pista" id="tLista" aria-live="polite"></div>
+      </div>
+      <div class="testi__nav" id="tNav" hidden>
+        <button class="testi__flecha" id="tAnt" type="button" data-i18n-attr="aria-label:t_ant" aria-label="Más recientes">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 3 5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="testi__puntos" id="tPuntos"></div>
+        <button class="testi__flecha" id="tSig" type="button" data-i18n-attr="aria-label:t_sig" aria-label="Más antiguos">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m6 3 5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
       <span id="tTxtEstrellas" data-i18n="t_estrellas" hidden></span>
       <span id="tTxtUna" data-i18n="t_una" hidden></span>
       <span id="tTxtVarias" data-i18n="t_varias" hidden></span>
+      <span id="tTxtPag" data-i18n="t_pag" hidden></span>
+      <span id="tTxtLeer" data-i18n="t_leer" hidden></span>
     </section>
-    <section class="row close" data-reveal>
+    <section class="row close" id="contacto" data-reveal>
       <p class="eyebrow"><i aria-hidden="true"></i> <span data-i18n="eyebrow_close">Cupos limitados por semana</span></p>
       <h2 class="close__h" data-i18n="close_h">¿Arrancamos?</h2>
       <div class="actions">
@@ -257,6 +286,17 @@
      el navegador tiene derecho a tirarlo; justamente lo que pasaba. -->
 <iframe name="buzon" id="buzon" title="envio" tabindex="-1" aria-hidden="true"
         style="position:absolute;width:0;height:0;border:0;left:-9999px"></iframe>
+
+<!-- EL TESTIMONIO ENTERO: lo abre "Leer mas" en las tarjetas cuyo texto
+     no entra. Va fuera de .wrap por lo mismo que el formulario. -->
+<dialog class="modal testi__modal" id="tModal" aria-label="Testimonio">
+  <div class="modal__caja" tabindex="-1">
+    <button type="button" class="modal__x" id="tModalX" data-i18n-attr="aria-label:f_cerrar" aria-label="Cerrar">
+      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><path d="M2 2l11 11M13 2L2 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </button>
+    <div id="tModalCuerpo"></div>
+  </div>
+</dialog>
 
 <dialog class="modal" id="modal" aria-labelledby="fTitulo">
   <form class="modal__caja" id="form" tabindex="-1" novalidate>
@@ -449,13 +489,14 @@
   </form>
 </dialog>
 
-<script src="js/i18n.js?v=20261113"></script>
-<script src="js/plexus.js?v=20261113"></script>
-<script src="js/drag.js?v=20261113"></script>
+<script src="js/i18n.js?v=20261113a"></script>
+<script src="js/plexus.js?v=20261113a"></script>
+<script src="js/drag.js?v=20261113a"></script>
 <!-- El formulario de diagnostico: intercepta los botones y, al
      enviarse, arma el mensaje y salta a WhatsApp. -->
-<script src="js/formulario.js?v=20261113"></script>
-<script src="js/meta.js?v=20261113"></script>
-<script src="js/testimonios.js?v=20261113"></script>
+<script src="js/formulario.js?v=20261113a"></script>
+<script src="js/meta.js?v=20261113a"></script>
+<script src="js/testimonios.js?v=20261113a"></script>
+<script src="js/nav.js?v=20261113a"></script>
 </body>
 </html>

@@ -6,7 +6,10 @@
 
    1. DISTORSION: el contenido real se deforma adentro del anillo
       (refraccion + cortes horizontales + split RGB) con el filtro SVG
-      #onda sobre <html>. Cada frame se genera el mapa de desplazamiento
+      #onda sobre el CONTENIDO (.wrap), no sobre <html>: con el filtro en
+      <html>, Chrome con aceleracion deja de dibujar las capas fijas (el
+      fondo de nodos y el cursor propio desaparecian) y al scrollear se
+      veia una franja blanca. Asi el fondo y el cursor quedan afuera. Cada frame se genera el mapa de desplazamiento
       (R = x, G = y, gris 128 = neutro) a baja resolucion.
    2. GLITCH DE TEXTO: los caracteres que alcanza el anillo se cambian un
       momento por glifos random (mas cuanto mas cerca del click) y vuelven.
@@ -44,6 +47,7 @@
   var CAIDA = 700;                                    /* px: con la distancia, el glitch de texto afloja */
 
   var root = document.documentElement;
+  var obj = document.querySelector('.wrap') || root;   /* a quien se le aplica el filtro */
   var $ = function (s) { return document.querySelector(s); };
   var caida = function (d) { return Math.exp(-d / CAIDA); };
 
@@ -74,7 +78,7 @@
     lvl = l;
     var L = NIVELES[lvl];
     if (fe) fe.removeAttribute('href');
-    if (!L) { root.style.removeProperty('filter'); return; }
+    if (!L) { obj.style.removeProperty('filter'); return; }
     filt = $(L.f); fe = $(L.m); K = L.K;
     EDGE = Math.round(56 / K);   /* cerca de los bordes se apaga: no samplea afuera (sin blancos) */
     mc = document.createElement('canvas'); mx = mc.getContext('2d'); mw = 0;
@@ -125,7 +129,7 @@
     ultimo = now;
     try { dibujar(now); } catch (e) { WAVE.list.length = 0; }
     if (WAVE.list.length) window.requestAnimationFrame(loop);
-    else { root.style.removeProperty('filter'); limpiar(); corriendo = false; }
+    else { obj.style.removeProperty('filter'); limpiar(); corriendo = false; }
   }
 
   function dibujar(now) {
@@ -141,12 +145,19 @@
 
   /* neutro = mismo trabajo pero sin deformar (para calibrar sin que se vea) */
   function render(act, neutro) {
-    var vw = VW, vh = VH, sy = window.scrollY;
+    var vw = VW, vh = VH, caja = obj.getBoundingClientRect();
     if (Math.ceil(vw / K) !== mw || Math.ceil(vh / K) !== mh) medir();
-    /* el filtro trabaja en coords del documento: su region = el viewport actual */
-    [filt, fe].forEach(function (el) {
-      el.setAttribute('x', 0); el.setAttribute('y', sy); el.setAttribute('width', vw); el.setAttribute('height', vh);
-    });
+    /* el filtro trabaja en coords del contenido: su region = la parte que
+       se ve en pantalla (no procesa toda la pagina) */
+    fe.setAttribute('x', -caja.left); fe.setAttribute('y', -caja.top);
+    fe.setAttribute('width', vw); fe.setAttribute('height', vh);
+    /* La region del FILTRO es mas grande que la pantalla (media pantalla
+       arriba y abajo): lo que queda fuera de la region no se dibuja, y al
+       scrollear en plena onda el contenido nuevo entraba por una franja
+       vacia. En ese margen no hay mapa, asi que no deforma nada. */
+    var margen = Math.round(vh / 2);
+    filt.setAttribute('x', -caja.left); filt.setAttribute('y', -caja.top - margen);
+    filt.setAttribute('width', vw); filt.setAttribute('height', vh + margen * 2);
 
     /* cortes: bloques de filas con desplazamiento horizontal al azar, cada 2 frames */
     if (frame++ % 2 === 0) for (var y0 = 0; y0 < mh;) {
@@ -187,7 +198,7 @@
     if (neutro) d.set(NEUTRO);
     mx.putImageData(img, 0, 0);
     publicar();
-    root.style.filter = 'url(' + NIVELES[lvl].f + ')';
+    obj.style.filter = 'url(' + NIVELES[lvl].f + ')';
   }
 
   /* CALIBRACION, con la compuerta de arranque tapando la pagina: se aplica
@@ -199,7 +210,7 @@
   function calibrar() {
     var base = [], test = [], prev = 0;
     var med = function (a) { return a.slice().sort(function (p, q) { return p - q; })[a.length >> 1]; };
-    var fin = function () { if (corriendo) return; root.style.removeProperty('filter'); limpiar(); };
+    var fin = function () { if (corriendo) return; obj.style.removeProperty('filter'); limpiar(); };
     var bajar = function () { usar(lvl + 1); test.length = 0; };
     window.requestAnimationFrame(function paso(now) {
       if (corriendo) return;
@@ -364,8 +375,19 @@
   /* ==================================================================
      EL CLICK
      ================================================================== */
+  /* SOLO UN CLICK DE VERDAD: apretar y soltar casi en el mismo lugar.
+     Arrastrar para scrollear (js/drag.js) o deslizar el carrusel no larga
+     onda: si no, el filtro trabajaba durante todo el arrastre y el scroll
+     se ponia pesado. Sale al soltar, donde se solto. */
+  var apreto = null;
   window.addEventListener('pointerdown', function (e) {
-    if (e.button) return;
+    apreto = e.button ? null : { id: e.pointerId, x: e.clientX, y: e.clientY };
+  }, { passive: true });
+  window.addEventListener('pointercancel', function () { apreto = null; }, { passive: true });
+  window.addEventListener('pointerup', function (e) {
+    var a = apreto;
+    apreto = null;
+    if (!a || a.id !== e.pointerId || Math.hypot(e.clientX - a.x, e.clientY - a.y) > 8) return;
     /* con un dialogo abierto el click es del dialogo: no se larga onda */
     if (document.querySelector('dialog[open]')) return;
     var x = e.clientX, y = e.clientY;

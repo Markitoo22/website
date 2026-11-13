@@ -63,14 +63,14 @@
      asi WhatsApp anda aunque el JavaScript no llegue a correr.
      Va aca arriba y sin defer porque el color de marca tiene que estar
      puesto antes del primer pintado. -->
-<script src="config_editor.js?v=20261113c"></script>
+<script src="config_editor.js?v=20261113d"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Quantico:wght@400;700&display=swap">
 <!-- ?v= corta el cache del CDN: Pages sirve con max-age=600 y cada nodo
      guarda su copia, asi que sin esto un visitante (o un celular en 4G,
      que sale por otro nodo) puede ver hasta 10 minutos la version vieja.
      SUBIR ESTE NUMERO EN CADA DEPLOY que toque css/ o js/. -->
-<link rel="stylesheet" href="css/theme.css?v=20261113c">
-<link rel="stylesheet" href="css/styles.css?v=20261113c">
+<link rel="stylesheet" href="css/theme.css?v=20261113d">
+<link rel="stylesheet" href="css/styles.css?v=20261113d">
 </head>
 <body>
 <canvas id="plexus" aria-hidden="true"></canvas>
@@ -489,14 +489,42 @@
   </form>
 </dialog>
 
-<script src="js/i18n.js?v=20261113c"></script>
-<script src="js/plexus.js?v=20261113c"></script>
-<script src="js/drag.js?v=20261113c"></script>
+<!-- EL FILTRO DE LA ONDA DEL CLICK (js/onda.js): desplaza el contenido real
+     con el mapa que genera el JS (R = x, G = y, gris = neutro). Tres
+     desplazamientos con distinta fuerza, uno por canal: split RGB solo
+     donde hay distorsion. La version liviana es para maquinas que no dan
+     abasto (la elige js/onda.js midiendo los frames). -->
+<svg class="fx-defs" aria-hidden="true" width="0" height="0">
+  <filter id="onda" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB" x="0" y="0" width="1" height="1">
+    <feImage id="onda-mapa" preserveAspectRatio="none" result="map"/>
+    <feFlood flood-color="rgb(128,128,128)" result="neutral"/>
+    <feComposite in="map" in2="neutral" operator="over" result="dmap"/>
+    <feDisplacementMap in="SourceGraphic" in2="dmap" scale="84" xChannelSelector="R" yChannelSelector="G" result="dr"/>
+    <feDisplacementMap in="SourceGraphic" in2="dmap" scale="70" xChannelSelector="R" yChannelSelector="G" result="dg"/>
+    <feDisplacementMap in="SourceGraphic" in2="dmap" scale="56" xChannelSelector="R" yChannelSelector="G" result="db"/>
+    <feColorMatrix in="dr" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="r"/>
+    <feColorMatrix in="dg" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="g"/>
+    <feColorMatrix in="db" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="b"/>
+    <feComposite in="r" in2="g" operator="arithmetic" k2="1" k3="1" result="rg"/>
+    <feComposite in="rg" in2="b" operator="arithmetic" k2="1" k3="1"/>
+  </filter>
+  <filter id="onda-lite" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB" x="0" y="0" width="1" height="1">
+    <feImage id="onda-mapa-lite" preserveAspectRatio="none" result="map"/>
+    <feFlood flood-color="rgb(128,128,128)" result="neutral"/>
+    <feComposite in="map" in2="neutral" operator="over" result="dmap"/>
+    <feDisplacementMap in="SourceGraphic" in2="dmap" scale="70" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+
+<script src="js/i18n.js?v=20261113d"></script>
+<script src="js/plexus.js?v=20261113d"></script>
+<script src="js/drag.js?v=20261113d"></script>
 <!-- El formulario de diagnostico: intercepta los botones y, al
      enviarse, arma el mensaje y salta a WhatsApp. -->
-<script src="js/formulario.js?v=20261113c"></script>
-<script src="js/meta.js?v=20261113c"></script>
-<script src="js/testimonios.js?v=20261113c"></script>
-<script src="js/nav.js?v=20261113c"></script>
+<script src="js/formulario.js?v=20261113d"></script>
+<script src="js/meta.js?v=20261113d"></script>
+<script src="js/testimonios.js?v=20261113d"></script>
+<script src="js/nav.js?v=20261113d"></script>
+<script src="js/onda.js?v=20261113d"></script>
 </body>
 </html>

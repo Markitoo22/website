@@ -1001,6 +1001,14 @@ html:has(.testrellas label:hover, .testi__punto:hover, .testi__flecha:hover, .te
   .tpag{ min-height: calc(100dvh - 56px); align-items: flex-start; }
 }
 
+/* ============ onda del click (js/onda.js) ============ */
+.fx-defs{ position: absolute; width: 0; height: 0; overflow: hidden; pointer-events: none; }
+/* las cajitas del glitch de texto: etiquetas propias para que ninguna
+   regla del sitio las alcance. Los renglones del original van con <br>:
+   no se corta en ningun otro lado, asi el texto no se reacomoda */
+zg-t, zg-w{ white-space: nowrap; }
+zg-c{ display: inline-block; text-align: center; }
+
 /* ============ responsive ============ */
 @media (max-width: 860px){
   .steps{ grid-template-columns: repeat(2, minmax(0,1fr)); }

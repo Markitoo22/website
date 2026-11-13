@@ -85,6 +85,13 @@
   var FORCE = 118;      /* px que se desplaza el nodo justo bajo el cursor */
   var EASE = 0.14;      /* que tan rapido acompaña el desplazamiento (0..1) */
   var ptr = { x: -9999, y: -9999, on: false, down: false };
+
+  /* EL EMPUJON DE LA ONDA DEL CLICK (js/onda.js). Cuando el anillo alcanza
+     a un nodo, sale despedido en el sentido de la onda (con un poco de
+     azar), mas fuerte cuanto mas cerca del click, y vuelve a su lugar con
+     un resorte amortiguado. Como el campo del cursor, es un desplazamiento
+     de DIBUJO: la posicion real del nodo no se toca. */
+  var KICK = 18, SPRING = 0.07, DAMP = 0.87, CAIDA = 700;
   var seg = [[], [], []];
   var STROKE = [C['plexus-near'], C['plexus-mid'], C['plexus-far']];
 
@@ -95,6 +102,9 @@
       vx: (Math.random() - 0.5) * 0.15,
       vy: (Math.random() - 0.5) * 0.15,
       ox: 0, oy: 0,        /* desplazamiento por el cursor (solo para dibujar) */
+      kx: 0, ky: 0,        /* empujon de la onda del click (solo para dibujar) */
+      kvx: 0, kvy: 0,      /* su velocidad: vuelve con resorte */
+      hit: 0,              /* id de la ultima onda que lo alcanzo */
       px: 0, py: 0,        /* posicion pintada = base + desplazamiento */
       s: Math.random() < 0.22 ? 2.4 : 1.4
     };
@@ -138,6 +148,10 @@
     seg[0].length = seg[1].length = seg[2].length = 0;
 
     var ox, oy, d, f;
+    var ahora = performance.now();
+    var FR = window.mlpcOnda ? window.mlpcOnda.frentes(ahora) : [];
+    /* el glitch de la onda: deformacion + split RGB mientras el anillo pasa */
+    var DEF = window.mlpcOnda ? window.mlpcOnda.deformacion(ahora) : null;
     for (i = 0; i < nodes.length; i++) {
       a = nodes[i];
       a.x += a.vx; a.y += a.vy;
@@ -174,8 +188,32 @@
       /* se acompaña en vez de saltar: con el mouse rapido no da tirones */
       a.ox += (ox - a.ox) * EASE;
       a.oy += (oy - a.oy) * EASE;
-      a.px = a.x + a.ox;
-      a.py = a.y + a.oy;
+      /* le llega el anillo: empujon (una vez por onda) */
+      for (var q = 0; q < FR.length; q++) {
+        var w = FR[q];
+        if (w.id <= a.hit) continue;
+        var ex = a.x + a.ox + a.kx - w.x, ey = a.y + a.oy + a.ky - w.y, ed = Math.sqrt(ex * ex + ey * ey) || 1;
+        if (ed > w.r) continue;
+        a.hit = w.id;
+        var p = KICK * (0.4 + Math.random() * 0.8) * 1.35 * Math.exp(-ed / CAIDA);
+        var ang = Math.atan2(ey, ex) + (Math.random() - 0.5) * 1.6;
+        a.kvx += Math.cos(ang) * p;
+        a.kvy += Math.sin(ang) * p;
+      }
+      if (a.kvx || a.kvy || a.kx || a.ky) {
+        a.kvx = (a.kvx - a.kx * SPRING) * DAMP;
+        a.kvy = (a.kvy - a.ky * SPRING) * DAMP;
+        a.kx += a.kvx; a.ky += a.kvy;
+        /* ya se acomodo: se deja en cero exacto y no se calcula mas */
+        if (Math.abs(a.kx) + Math.abs(a.ky) + Math.abs(a.kvx) + Math.abs(a.kvy) < 0.02) a.kx = a.ky = a.kvx = a.kvy = 0;
+      }
+      a.px = a.x + a.ox + a.kx;
+      a.py = a.y + a.oy + a.ky;
+      a.e = 0;
+      if (DEF) {
+        var g = DEF(a.px, a.py);
+        a.px += g.dx; a.py += g.dy; a.e = g.e;
+      }
     }
 
     for (i = 0; i < nodes.length; i++) {
@@ -207,6 +245,46 @@
        constelacion juntandose en tu puntero). Con repulsion se contradicen,
        porque los nodos se van y las lineas los persiguen. El efecto ahora es
        la malla abriendose, y eso se lee mejor solo. */
+
+    /* SPLIT RGB adentro del anillo, como el filtro sobre el contenido: una
+       copia roja y una azul corridas a los costados de cada nodo y de cada
+       linea que toca la onda. Rojo y azul puros a proposito: es el mismo
+       corrimiento de canales que hace el filtro, no un color de la marca. */
+    if (DEF) {
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      for (i = 0; i < nodes.length; i++) {
+        a = nodes[i];
+        if (a.e < 0.05) continue;
+        var o = a.e * 9, al = Math.min(1, a.e * 1.4), z = a.s + 1;
+        ctx.fillStyle = 'rgba(255,40,60,' + al + ')';
+        ctx.fillRect(a.px - o - z / 2, a.py - z / 2, z, z);
+        ctx.fillStyle = 'rgba(40,120,255,' + al + ')';
+        ctx.fillRect(a.px + o - z / 2, a.py - z / 2, z, z);
+      }
+      for (k = 0; k < 2; k++) {
+        ctx.beginPath();
+        var hay = false;
+        for (i = 0; i < nodes.length; i++) {
+          a = nodes[i];
+          if (a.e < 0.05) continue;
+          for (j = i + 1; j < nodes.length; j++) {
+            b = nodes[j];
+            dx = a.px - b.px; dy = a.py - b.py;
+            if (dx * dx + dy * dy >= LINK2) continue;
+            var o2 = (k ? 1 : -1) * Math.max(a.e, b.e || 0) * 9;
+            ctx.moveTo(a.px + o2, a.py); ctx.lineTo(b.px + o2, b.py);
+            hay = true;
+          }
+        }
+        if (hay) {
+          ctx.strokeStyle = k ? 'rgba(40,120,255,.35)' : 'rgba(255,40,60,.35)';
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+    }
 
     for (i = 0; i < nodes.length; i++) {
       a = nodes[i];

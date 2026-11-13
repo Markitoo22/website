@@ -61,8 +61,40 @@
     return out;
   }
 
+  /* La misma deformacion que hace el filtro, pero como funcion: (x, y) en
+     pantalla -> { dx, dy, e } (e = intensidad 0-1, para el split RGB).
+     La usa el fondo de nodos (js/plexus.js), que esta fuera del contenido y
+     no lo alcanza el filtro: se deforma solo, nodo por nodo. */
+  var PX = 36;   /* desplazamiento maximo, como el del filtro */
+  function deformacion(now) {
+    var act = [];
+    WAVE.list.forEach(function (R) {
+      var p = (now - R.t0) / WAVE.DUR;
+      if (p >= 0 && p < 1) act.push({ x: R.x, y: R.y, r: R.maxR * (1 - Math.pow(1 - p, 2.2)), f: Math.pow(1 - p, 1.3) });
+    });
+    if (!act.length) return null;
+    var half = WAVE.T / 2, seed = Math.floor(now / 33);   /* cortes: se re-sortean ~30 veces por segundo */
+    return function (x, y) {
+      var dx = 0, dy = 0, e = 0;
+      for (var i = 0; i < act.length; i++) {
+        var a = act[i], ox = x - a.x, oy = y - a.y, d = Math.hypot(ox, oy) || 1, s = (d - a.r) / half;
+        if (s <= -1 || s >= 1) continue;
+        var k = (.5 + .5 * Math.cos(Math.PI * s)) * a.f, wv = Math.sin(Math.PI * s) * A_WAVE;
+        var h = Math.sin(Math.floor(y / 14) * 12.9898 + seed * 78.233) * 43758.5453;
+        h = h - Math.floor(h);
+        var tear = h < .4 ? h / .4 * 2 - 1 : 0;
+        dx += (ox / d * wv + tear * A_TEAR) * k; dy += oy / d * wv * k; e = Math.max(e, k);
+      }
+      return { dx: Math.max(-1, Math.min(1, dx)) * PX, dy: Math.max(-1, Math.min(1, dy)) * PX, e: e };
+    };
+  }
+
+  /* el fondo de nodos (js/plexus.js) lee de aca donde va el anillo (para
+     el empujon) y la deformacion (para el glitch) */
+  window.mlpcOnda = { frentes: frentes, deformacion: deformacion };
+
   /* ==================================================================
-     1. DISTORSION (filtro SVG sobre <html>)
+     1. DISTORSION (filtro SVG sobre el contenido)
      ================================================================== */
   var NIVELES = [
     { K: 4, f: '#onda', m: '#onda-mapa' },            /* mapa a 1/4, split RGB */

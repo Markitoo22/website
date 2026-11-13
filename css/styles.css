@@ -570,6 +570,102 @@ main > section[id]{ scroll-margin-top: 62px; }
   background: var(--veil-deep);
   backdrop-filter: blur(4px);
 }
+
+/* ENTRADA Y SALIDA DE LAS VENTANAS: un monitor CRT que se prende y se
+   apaga, en la estetica del sitio.
+
+   Al abrir: una linea brillante en el medio se abre hacia arriba y abajo
+   (clip-path), con un destello que se apaga, un instante de split RGB en
+   el borde y una linea de escaneo que barre la caja. El contenido entra
+   escalonado. Todo es CSS y arranca solo al abrirse ([open]).
+
+   Al cerrar: se aplasta a una linea y la linea a un punto. Eso lo dispara
+   js/ventanas.js (le pone .cerrando y recien al terminar la cierra de
+   verdad), porque una animacion no puede correr en algo que ya se cerro.
+
+   Sin filter en las animaciones A PROPOSITO: js/onda.js usa filter en la
+   caja para el glitch del click, y una animacion de filter lo taparia. El
+   destello va en un pseudo-elemento.
+
+   La entrada va con "backwards", no "both": al terminar NO queda nada
+   puesto. Con "both" la caja se quedaba con su clip-path final, y eso
+   cortaba las listas desplegables del formulario, que son flotantes
+   (position: fixed) y pueden salir de la caja. */
+.modal::backdrop{
+  opacity: 0;
+  transition: opacity .35s var(--ease), overlay .35s allow-discrete, display .35s allow-discrete;
+}
+.modal[open]::backdrop{ opacity: 1; }
+@starting-style{ .modal[open]::backdrop{ opacity: 0; } }
+.modal.cerrando::backdrop{ opacity: 0; }
+
+.modal[open] .modal__caja{ animation: crtPrende .62s cubic-bezier(.2,.8,.2,1) backwards; }
+.modal.cerrando .modal__caja{ animation: crtApaga .36s cubic-bezier(.6,0,.8,.4) both; }
+
+@keyframes crtPrende{
+  0%  { clip-path: inset(50% 50% 50% 50%); box-shadow: none; }
+  18% { clip-path: inset(calc(50% - 1px) 0 calc(50% - 1px) 0); }
+  55% { clip-path: inset(0 0 0 0);
+        box-shadow: -4px 0 0 rgb(255 40 60 / .55), 4px 0 0 rgb(40 120 255 / .55); }
+  75% { box-shadow: -1px 0 0 rgb(255 40 60 / .3), 1px 0 0 rgb(40 120 255 / .3); }
+  100%{ clip-path: inset(0 0 0 0); box-shadow: none; }
+}
+@keyframes crtApaga{
+  0%  { clip-path: inset(0 0 0 0); opacity: 1; }
+  55% { clip-path: inset(calc(50% - 1px) 0 calc(50% - 1px) 0); opacity: 1; }
+  100%{ clip-path: inset(calc(50% - 1px) 50% calc(50% - 1px) 50%); opacity: 0; }
+}
+
+/* el destello (la caja se ve "encendida" y se apaga a su color) y la
+   linea de escaneo que la barre de arriba a abajo */
+.modal .modal__caja::before,
+.modal .modal__caja::after{
+  content: ''; position: absolute; left: 0; right: 0; pointer-events: none; z-index: 5;
+  opacity: 0;
+}
+.modal .modal__caja::before{
+  top: 0; bottom: 0;
+  background: radial-gradient(120% 60% at 50% 50%, rgb(from var(--accent) r g b / .55), rgb(from var(--fg) r g b / .18) 60%, transparent);
+  mix-blend-mode: screen;
+}
+.modal .modal__caja::after{
+  /* ocupa la caja quieta y lo que baja es su FONDO: si se moviera la
+     linea entera, al pasar el borde de abajo agrandaba lo scrolleable y
+     la caja quedaba con barra de scroll */
+  top: 0; bottom: 0;
+  background: linear-gradient(180deg, transparent, rgb(from var(--accent) r g b / .22) 70%, rgb(from var(--accent) r g b / .55) 96%, transparent)
+              0 -90px / 100% 90px no-repeat;
+}
+.modal[open] .modal__caja::before{ animation: crtDestello .62s ease-out both; }
+.modal[open] .modal__caja::after{ animation: crtBarrido .75s .18s cubic-bezier(.4,0,.2,1) both; }
+.modal.cerrando .modal__caja::before{ animation: crtDestelloFin .36s ease-in both; }
+@keyframes crtDestello{ 0%, 25%{ opacity: 1; } 100%{ opacity: 0; } }
+@keyframes crtDestelloFin{ 0%{ opacity: 0; } 60%, 100%{ opacity: 1; } }
+@keyframes crtBarrido{
+  0%  { opacity: 1; background-position: 0 -90px; }
+  85% { opacity: 1; }
+  100%{ opacity: 0; background-position: 0 calc(100% + 90px); }
+}
+
+/* el contenido entra escalonado, una vez que la caja ya se abrio.
+   SOLO OPACIDAD, a proposito:
+   - sin transform: corrido hacia abajo, el ultimo elemento asomaba por
+     debajo y aparecia la barra de scroll;
+   - sin filter (blur): un filter o un transform hace que las listas
+     desplegables de adentro (position: fixed) se midan desde ese bloque
+     y no desde la pantalla. Abrir una lista en el primer segundo la
+     dejaba corrida y la caja scrolleaba sola, que la cerraba. */
+.modal[open] .modal__caja > *{ animation: crtEntra .45s cubic-bezier(.2,.8,.2,1) backwards; }
+.modal[open] .modal__caja > :nth-child(1){ animation-delay: .22s; }
+.modal[open] .modal__caja > :nth-child(2){ animation-delay: .27s; }
+.modal[open] .modal__caja > :nth-child(3){ animation-delay: .32s; }
+.modal[open] .modal__caja > :nth-child(4){ animation-delay: .37s; }
+.modal[open] .modal__caja > :nth-child(5){ animation-delay: .42s; }
+.modal[open] .modal__caja > :nth-child(6){ animation-delay: .47s; }
+.modal[open] .modal__caja > :nth-child(7){ animation-delay: .52s; }
+.modal[open] .modal__caja > :nth-child(n+8){ animation-delay: .57s; }
+@keyframes crtEntra{ from{ opacity: 0; } to{ opacity: 1; } }
+
 /* Un <dialog> NO hereda el user-select del body: se dibuja en la top
    layer y el navegador le pone "text" por su cuenta. Sin esto, adentro
    del formulario se podia seleccionar todo, en contra de la regla del
@@ -999,6 +1095,14 @@ html:has(.testrellas label:hover, .testi__punto:hover, .testi__flecha:hover, .te
   .testi__txt--corto p{ font-size: 1.12rem; }
   .testi__pie{ padding-top: 8px; }
   .tpag{ min-height: calc(100dvh - 56px); align-items: flex-start; }
+}
+
+/* ============ glitch del salto a WhatsApp (js/salto.js) ============ */
+.salto-fx{ position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 70; }
+/* split RGB en todo el texto mientras dura, mas fuerte al final */
+.salto-glitch body *{
+  text-shadow: var(--gx, 0) 0 rgb(from var(--mal) r g b / var(--ga, 0)),
+               calc(var(--gx, 0) * -1) 0 rgb(40 120 255 / var(--ga, 0));
 }
 
 /* ============ onda del click (js/onda.js) ============ */

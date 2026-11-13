@@ -23,8 +23,11 @@
      todavia no se ve) y, mientras corre una onda, si los frames tardan
      mas de 40 ms baja un nivel en el momento. En el peor caso queda solo
      el glitch de texto.
-   - No toca los formularios ni los dialogos (los textos del formulario de
-     diagnostico no se glitchean mientras alguien lo completa).
+   - Tambien alcanza a la ventana que este abierta (el formulario de
+     diagnostico, "Leer mas"): esas se dibujan en una capa aparte, arriba
+     de todo, y el filtro del contenido no las toca. Se les aplica una
+     copia del filtro a su caja. Lo unico que nunca se glitchea son los
+     campos donde se escribe.
    - Con "reducir movimiento" activado en el sistema, no hace nada.
    - Si otro codigo reescribe un texto mientras glitchea (el conteo de los
      numeros, el cambio de idioma, el carrusel), se suelta sin pisar nada.
@@ -110,13 +113,37 @@
     lvl = l;
     var L = NIVELES[lvl];
     if (fe) fe.removeAttribute('href');
-    if (!L) { obj.style.removeProperty('filter'); return; }
+    if (feV) feV.removeAttribute('href');
+    if (!L) { sacarFiltros(); return; }
     filt = $(L.f); fe = $(L.m); K = L.K;
+    filtV = $(L.f + '-v'); feV = $(L.m + '-v');
     EDGE = Math.round(56 / K);   /* cerca de los bordes se apaga: no samplea afuera (sin blancos) */
     mc = document.createElement('canvas'); mx = mc.getContext('2d'); mw = 0;
   }
   if (!$('#onda')) return;
+
+  /* La ventana abierta necesita SU copia del filtro: la region del filtro
+     se mide desde la caja del elemento, y la ventana esta en otro lugar
+     que el contenido. Mismo mapa, otra region. */
+  ['#onda', '#onda-lite'].forEach(function (id) {
+    var orig = $(id);
+    if (!orig) return;
+    var copia = orig.cloneNode(true);
+    copia.id = orig.id + '-v';
+    var img = copia.querySelector('feImage');
+    if (img) img.id = img.id + '-v';
+    orig.parentNode.appendChild(copia);
+  });
+  var filtV, feV, ventana = null;   /* la caja de la ventana que tiene el filtro puesto */
+  function sacarFiltros() {
+    obj.style.removeProperty('filter');
+    if (ventana) { ventana.style.removeProperty('filter'); ventana = null; }
+  }
   usar(lvl);
+
+  document.addEventListener('mlpc:desplegable', function () {
+    if (ventana) { ventana.style.removeProperty('filter'); ventana = null; }
+  });
 
   /* viewport sin la barra de scroll, cacheado: leerlo por frame fuerza un layout */
   var VW = root.clientWidth, VH = root.clientHeight;
@@ -141,6 +168,7 @@
       if (!b || !vivo) return;
       var u = URL.createObjectURL(b);
       fe.setAttribute('href', u);
+      if (feV) feV.setAttribute('href', u);
       if (url) URL.revokeObjectURL(url);
       url = u;
     });
@@ -148,12 +176,17 @@
   function limpiar() {
     vivo = false;
     if (fe) fe.removeAttribute('href');
+    if (feV) feV.removeAttribute('href');
     if (url) { URL.revokeObjectURL(url); url = null; }
   }
 
   var corriendo = false, frame = 0, ultimo = 0, dts = [];
 
   function loop(now) {
+    /* con una ventana abierta no se mide: su animacion de entrada (y el
+       desenfoque del fondo) hacen lentos unos frames, y eso no tiene que
+       bajar la calidad para el resto de la visita */
+    if (document.querySelector('dialog[open]')) { dts.length = 0; ultimo = 0; }
     if (ultimo) {
       dts.push(now - ultimo); if (dts.length > 4) dts.shift();
       if (dts.length === 4 && lvl < NIVELES.length - 1 && dts.slice().sort(function (a, b) { return a - b; })[1] > 40) { usar(lvl + 1); dts.length = 0; }
@@ -161,7 +194,7 @@
     ultimo = now;
     try { dibujar(now); } catch (e) { WAVE.list.length = 0; }
     if (WAVE.list.length) window.requestAnimationFrame(loop);
-    else { obj.style.removeProperty('filter'); limpiar(); corriendo = false; }
+    else { sacarFiltros(); limpiar(); corriendo = false; }
   }
 
   function dibujar(now) {
@@ -230,7 +263,28 @@
     if (neutro) d.set(NEUTRO);
     mx.putImageData(img, 0, 0);
     publicar();
-    obj.style.filter = 'url(' + NIVELES[lvl].f + ')';
+    /* la ventana abierta, si hay: su caja, con su copia del filtro. Con una
+       ventana abierta el contenido de atras NO se filtra: esta oscurecido y
+       desenfocado, casi no se ve, y era lo mas caro. */
+    var caja2 = document.querySelector('dialog[open] > .modal__caja');
+    if (caja2) obj.style.removeProperty('filter');
+    else obj.style.filter = 'url(' + NIVELES[lvl].f + ')';
+    /* Con una lista desplegable abierta (pais, problema) la caja NO lleva
+       filtro: un filter hace que lo position: fixed de adentro se mida
+       desde la caja y no desde la pantalla. Al ABRIRSE una lista el
+       formulario avisa (mlpc:desplegable) y se saca en el momento, antes
+       de que la lista se ubique. El glitch de letras sigue igual. */
+    if (caja2 && caja2.querySelector('.combo__lista:not([hidden])')) caja2 = null;
+    if (ventana && ventana !== caja2) { ventana.style.removeProperty('filter'); ventana = null; }
+    if (caja2 && filtV && feV) {
+      var rv = caja2.getBoundingClientRect();
+      feV.setAttribute('x', -rv.left); feV.setAttribute('y', -rv.top);
+      feV.setAttribute('width', vw); feV.setAttribute('height', vh);
+      filtV.setAttribute('x', -rv.left); filtV.setAttribute('y', -rv.top);
+      filtV.setAttribute('width', vw); filtV.setAttribute('height', vh);
+      caja2.style.filter = 'url(' + NIVELES[lvl].f + '-v)';
+      ventana = caja2;
+    }
   }
 
   /* CALIBRACION, con la compuerta de arranque tapando la pagina: se aplica
@@ -242,7 +296,7 @@
   function calibrar() {
     var base = [], test = [], prev = 0;
     var med = function (a) { return a.slice().sort(function (p, q) { return p - q; })[a.length >> 1]; };
-    var fin = function () { if (corriendo) return; obj.style.removeProperty('filter'); limpiar(); };
+    var fin = function () { if (corriendo) return; sacarFiltros(); limpiar(); };
     var bajar = function () { usar(lvl + 1); test.length = 0; };
     window.requestAnimationFrame(function paso(now) {
       if (corriendo) return;
@@ -262,7 +316,9 @@
   /* ==================================================================
      2. GLITCH DE TEXTO
      ================================================================== */
-  var SALTEAR = 'script,style,svg,input,textarea,select,dialog,.cursor,.cursor-glow,zg-t';
+  /* .combo__lista: las opciones de una lista abierta no se glitchean (se
+     estan eligiendo, y envolverlas movia la lista) */
+  var SALTEAR = 'script,style,svg,input,textarea,select,.combo__lista,.cursor,.cursor-glow,zg-t';
   var vivos = new Map(), golpe = new WeakMap(), pend = [], glitcheando = false;
   var rnd = function () { return GLITCH.chars[Math.random() * GLITCH.chars.length | 0]; };
 
@@ -420,8 +476,6 @@
     var a = apreto;
     apreto = null;
     if (!a || a.id !== e.pointerId || Math.hypot(e.clientX - a.x, e.clientY - a.y) > 8) return;
-    /* con un dialogo abierto el click es del dialogo: no se larga onda */
-    if (document.querySelector('dialog[open]')) return;
     var x = e.clientX, y = e.clientY;
     /* radio final fijo: misma velocidad desde cualquier punto, y alcanza
        para barrer toda la pantalla */

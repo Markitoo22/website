@@ -409,6 +409,11 @@
 
     function abrir() {
       cerrarTodos(yo);
+      /* Aviso a js/onda.js ANTES de abrir: si la caja tiene puesto el
+         filtro del glitch, lo saca ya. Con un filter en la caja, esta lista
+         (position: fixed) se mediria desde la caja y no desde la pantalla:
+         quedaba corrida, la caja scrolleaba sola y eso la cerraba. */
+      try { document.dispatchEvent(new CustomEvent('mlpc:desplegable')); } catch (e) {}
       lista.hidden = false;
       ubicar();
       btn.setAttribute('aria-expanded', 'true');
@@ -729,6 +734,32 @@
         salida.hidden = false;
         if (salidaLink) salidaLink.href = porWeb(d);
       }
+
+      /* EL GLITCH (js/salto.js)
+
+         En el TELEFONO no demora nada: el salto lo hace el link en el
+         instante del toque (el navegador de Instagram y Safari solo dejan
+         abrir la app ahi) y el efecto corre abajo, mientras aparece el
+         cartel o la app. El formulario queda abierto por "¿No se abrio?".
+
+         En la PC primero el glitch y en el pico se abre WhatsApp Web en una
+         pestaña nueva. Ahi no hay navegador de Instagram, y Chrome deja
+         abrir pestañas hasta 5 s despues del click. Si el navegador la
+         bloquea, se va en la misma pestaña: nunca se queda sin salto.
+         (Con Ctrl/Cmd o la rueda, como cualquier link: sin efecto.) */
+      if (window.mlpcGlitchSalto) {
+        if (esTelefono) {
+          window.mlpcGlitchSalto();
+        } else if (!(e.ctrlKey || e.metaKey || e.shiftKey || e.button)) {
+          e.preventDefault();
+          var url = enviar.href;
+          window.mlpcGlitchSalto(function () {
+            var w = window.open(url, '_blank');
+            if (w) w.opener = null; else location.href = url;
+            if (modal.open) modal.close();
+          });
+        }
+      }
     });
   }
 
@@ -748,6 +779,16 @@
      no con lo que ve de antemano — y antes del formulario, cuando el
      boton era un link con su href escrito en el HTML, interceptaba.
      ------------------------------------------------------------------ */
+  /* En la PC, WhatsApp Web va a una pestaña NUEVA (normalmente la abre
+     el glitch del salto, en su pico; esto es por si no corre). El aviso de
+     "no llego" sigue andando: la pestaña nueva pone a esta en segundo
+     plano, y eso cuenta como que llego. En el telefono no: el esquema
+     whatsapp:// abre la app y la pagina se queda igual. */
+  if (enviar && !esTelefono) {
+    enviar.target = '_blank';
+    enviar.rel = 'noopener';
+  }
+
   function refrescarSalto() {
     if (!enviar) return;
     var d = leer(false);
